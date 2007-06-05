@@ -1,0 +1,30 @@
+1.7   2005-01-04
+    - Corrected terms 2004-2006 (which were incorrectly given as 2003)
+
+    - Term dates before 2004 are not shown on the OU website; always
+      pre-load them
+
+1.6   2004-11-20
+    - New maintainer: Eugene van der Pijll <pijll@cpan.org>
+
+    - Added terms 2004-2006 to internal database
+
+2002-11-26 09:06  simon
+
+	* MANIFEST: Yes, we are a Debian module.
+
+2002-11-26 09:03  simon
+
+	* Calendar.pm: Keep internal database going for another few years.
+
+2002-06-17 19:21  simon
+
+	* Calendar.pm: Fix ugly "week 0" bug
+
+2002-05-02 19:27  simon
+
+	* Calendar.pm, Changes, MANIFEST, Makefile.PL, test.pl,
+	debian/changelog, debian/control, debian/files, debian/rules: 
+	
+	Bring calendar under version control.
+

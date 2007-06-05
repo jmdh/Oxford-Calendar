@@ -1,13 +1,13 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Oxford-Calendar
-version:      1.7
+version:      1.8
 version_from: Calendar.pm
 installdirs:  site
 requires:
     Date::Calc:                    0
-    LWP::Simple:                   0
     Text::Abbrev:                  0
+    YAML:                          0
 
 distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.17
+generated_by: ExtUtils::MakeMaker version 6.30_01

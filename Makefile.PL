@@ -6,7 +6,7 @@ WriteMakefile(
     'VERSION_FROM'	=> 'Calendar.pm', # finds $VERSION
     'PREREQ_PM'		=> {
     Text::Abbrev => 0,
-    LWP::Simple => 0,
     Date::Calc => 0,
+    YAML => 0,
     }, # e.g., Module::Name => 1.1
 );

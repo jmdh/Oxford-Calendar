@@ -1,3 +1,16 @@
+1.8   2007-05-27
+    - New maintainer: Dominic Hargreaves <dom@cpan.org>
+
+    - Convert built-in data to YAML and add more dates
+
+    - Support reading data from an external YAML file
+
+    - Remove support for fetching data from University web pages, as this
+      functionality is fragile and has broken.
+
+    - Run perltidy on Calendar.pm in line with
+      Damien Conway's Best Practices
+
 1.7   2005-01-04
     - Corrected terms 2004-2006 (which were incorrectly given as 2003)
 

@@ -11,7 +11,7 @@ use constant CALENDAR => '/etc/oxford-calendar.yaml';
 
 =head1 NAME
 
-Oxford::Calendar - Oxford calendar conversion routines
+Oxford::Calendar - University of Oxford calendar conversion routines
 
 =head1 SYNOPSIS
 
@@ -20,11 +20,46 @@ Oxford::Calendar - Oxford calendar conversion routines
 
 =head1 DESCRIPTION
 
-This module converts Oxford dates to and from Real World dates using data
-supplied in YAML data.
+This module converts University of Oxford dates to and from Real World
+dates using data supplied in YAML format.
 
-If the file /etc/oxford-calendar.yaml exists, data will be read from that;
-otherwise, built-in data will be used.
+If the file F</etc/oxford-calendar.yaml> exists, data will be read from that;
+otherwise, built-in data will be used. The built-in data is periodically
+updated from the authoritative source at
+
+L<http://www.ox.ac.uk/about_the_university/university_year/dates_of_term.html>.
+
+=head1 DATE FORMAT
+
+An Oxford date takes the form
+
+=over
+
+<day of week>, <week number>[st,nd,rd,th] week, <term name> <year>
+
+=back
+
+where term name is one of
+
+=over
+
+=item *
+
+Michaelmas (roughly Autumn)
+
+=item *
+
+Hilary (roughly Winter/Spring)
+
+=item *
+
+Trinity (roughly Spring/Summer)
+
+=back
+
+Example:
+
+Friday, 8th Week, Michaelmas 2007
 
 =cut
 
@@ -225,11 +260,13 @@ sub FromOx {
 
 =head1 AUTHOR
 
-Simon Cozens
+Simon Cozens is the original author of this module.
 
-Eugene van der Pijll, C<pijll@cpan.org>
+Eugene van der Pijll, C<pijll@cpan.org> took over maintenance from
+Simon for a time.
 
-Dominic Hargreaves
+Dominic Hargreaves currently maintains this module in his capacity as
+employee of the Computing Services, University of Oxford.
 
 =cut
 

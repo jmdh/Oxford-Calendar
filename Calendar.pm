@@ -31,7 +31,7 @@ L<http://www.ox.ac.uk/about_the_university/university_year/dates_of_term.html>.
 
 =head1 DATE FORMAT
 
-An Oxford date takes the form
+An Oxford academic date takes the form
 
 =over
 
@@ -45,21 +45,24 @@ where term name is one of
 
 =item *
 
-Michaelmas (roughly Autumn)
+Michaelmas (autumn)
 
 =item *
 
-Hilary (roughly Winter/Spring)
+Hilary (spring)
 
 =item *
 
-Trinity (roughly Spring/Summer)
+Trinity (summer)
 
 =back
 
 Example:
 
 Friday, 8th Week, Michaelmas 2007
+
+L<http://www.ox.ac.uk/about_the_university/university_year/index.html>
+describes the academic year at Oxford.
 
 =cut
 

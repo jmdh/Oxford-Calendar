@@ -1,7 +1,8 @@
 1.9   UNRELEASED
     - Improve documention to describe the Oxford date format and add
       references to the University
-    - Move Calendar.pm to lib/, and test.pl to t/
+    - Move Calendar.pm to lib/, and test.pl to t/ (and convert to using
+      Test::More)
 
 1.8   2007-05-27
     - New maintainer: Dominic Hargreaves <dom@cpan.org>

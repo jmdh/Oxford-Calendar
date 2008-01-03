@@ -3,9 +3,9 @@ use warnings;
 
 use Test::More;
 
-plan tests => 10;
+plan tests => 4;
 
-BEGIN { use_ok( 'Oxford::Calendar' ); }
+use_ok( 'Oxford::Calendar' );
 require_ok( 'Oxford::Calendar' );
 
 is( Oxford::Calendar::ToOx(24,2,2002), "Sunday, 7th week, Hilary 2002." );

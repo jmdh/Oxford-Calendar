@@ -6,8 +6,13 @@
 package Oxford::Calendar;
 $Oxford::Calendar::VERSION = "1.8";
 use strict;
+use Text::Abbrev;
+use Date::Calc qw(Decode_Date_EU);
+use YAML;
+use Time::Seconds;
 
 use constant CALENDAR => '/etc/oxford-calendar.yaml';
+use constant SEVEN_WEEKS => 7 * ONE_WEEK;
 
 =head1 NAME
 
@@ -66,10 +71,6 @@ describes the academic year at Oxford.
 
 =cut
 
-use Text::Abbrev;
-use Date::Calc qw(Decode_Date_EU);
-use YAML;
-
 our %db;
 
 my $_initcal;    # If this is true, we have our database of dates already.
@@ -93,7 +94,7 @@ sub Init {
 }
 
 sub InitHTML {
-    die "This method is no longer suported";
+    die "This method is no longer supported";
 }
 
 =head1 Functions

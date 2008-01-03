@@ -1,4 +1,4 @@
-lib/Calendar.pm
+lib/Oxford/Calendar.pm
 Changes
 MANIFEST
 Makefile.PL

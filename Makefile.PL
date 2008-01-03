@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
     'NAME'		=> 'Oxford::Calendar',
-    'VERSION_FROM'	=> 'lib/Calendar.pm', # finds $VERSION
+    'VERSION_FROM'	=> 'lib/Oxford/Calendar.pm', # finds $VERSION
     'PREREQ_PM'		=> {
     Text::Abbrev => 0,
     Date::Calc => 0,

@@ -4,10 +4,10 @@
 # Dominic Hargreaves / University of Oxford (c) 2007
 # Artistic License
 package Oxford::Calendar;
-$Oxford::Calendar::VERSION = "1.8";
+$Oxford::Calendar::VERSION = "1.9";
 use strict;
 use Text::Abbrev;
-use Date::Calc qw(Decode_Date_EU);
+use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime);
 use YAML;
 use Time::Seconds;
 
@@ -74,13 +74,14 @@ describes the academic year at Oxford.
 our %db;
 
 my $_initcal;    # If this is true, we have our database of dates already.
+my @oxford_terms;
 
 # Load up the calendar on demand.
 sub _initcal {
     Oxford::Calendar::Init();
 }
 
-sub Init {
+sub _init_db {
     my $db;
     if ( -r CALENDAR ) {
         $db = YAML::LoadFile(CALENDAR);
@@ -90,6 +91,27 @@ sub Init {
         $db = YAML::Load($data);
     }
     %db = %{ $db->{Calendar} };
+}
+
+sub _init_range {
+    foreach my $termspec ( keys %db ) {
+        next unless $db{$termspec};
+
+        my $time = eval { Mktime( Decode_Date_EU( $db{$termspec} ), 0, 0, 0 ) }
+             or die
+                "Could not decode date ($db{$termspec}) for term $termspec: $@";
+
+        push @oxford_terms,
+            [$time, ($time + SEVEN_WEEKS), split(/ /, $termspec)];
+    }
+
+    # Sort this here, but do not rely on it later
+    @oxford_terms = sort { $a->[0] <=> $b->[0] } @oxford_terms;
+}
+
+sub Init {
+    _init_db;
+    _init_range;
     $_initcal++;
 }
 
@@ -258,6 +280,19 @@ sub FromOx {
         unless $start[0];
     return join "/", reverse( Date::Calc::Add_Delta_Days( @start, $delta ) );
 
+}
+
+=item get_oxford_terms
+
+Returns a hashref contain valid terms
+
+XXX what exactly?
+
+=cut
+
+sub get_oxford_terms {
+    &_initcal unless defined $_initcal;
+    \@oxford_terms;
 }
 
 "A TRUE VALUE";

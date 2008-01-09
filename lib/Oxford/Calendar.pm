@@ -74,11 +74,45 @@ describes the academic year at Oxford.
 our %db;
 
 my $_initcal;    # If this is true, we have our database of dates already.
-my @oxford_terms;
+my @_oxford_terms;
+my @_days = qw(Sunday Monday Tuesday Wednesday Thursday Friday Saturday);
 
 # Load up the calendar on demand.
 sub _initcal {
     Oxford::Calendar::Init();
+}
+
+sub _get_week_suffix {
+    my $week = shift;
+    die "_get_week_suffix: No week given" unless defined $week;
+    my $wsuffix = "th";
+    abs($week) == 1 && ( $wsuffix = "st" );
+    abs($week) == 2 && ( $wsuffix = "nd" );
+    abs($week) == 3 && ( $wsuffix = "rd" );
+  
+    return $wsuffix;
+}
+
+sub _find_week {
+    my $tm = shift;
+    my $sweek = shift;
+    my $sweek_tm = shift;
+
+    my $max_week = shift;
+    my $max_tm = shift;
+
+    my $eow = $sweek_tm + ONE_WEEK;
+
+    while ( $tm >= $eow ) {
+        $eow += ONE_WEEK;
+        $sweek++;
+    }
+    # Sanity Check
+    die "Bad programmer: $sweek is longer than max weeks ($max_week) "
+        . "and/or $eow is after the end of term ($max_tm)"
+        if ( $sweek >= $max_week or $eow > $max_tm);
+   
+    return $sweek;
 }
 
 sub _init_db {
@@ -101,12 +135,12 @@ sub _init_range {
              or die
                 "Could not decode date ($db{$termspec}) for term $termspec: $@";
 
-        push @oxford_terms,
+        push @_oxford_terms,
             [$time, ($time + SEVEN_WEEKS), split(/ /, $termspec)];
     }
 
     # Sort this here, but do not rely on it later
-    @oxford_terms = sort { $a->[0] <=> $b->[0] } @oxford_terms;
+    @_oxford_terms = sort { $a->[0] <=> $b->[0] } @_oxford_terms;
 }
 
 sub Init {
@@ -118,6 +152,60 @@ sub Init {
 sub InitHTML {
     die "This method is no longer supported";
 }
+
+sub ToOx_strict {
+    my (@dmy) = @_;
+    my $tm = Mktime((reverse @dmy), 0, 0, 0);
+   
+    my @term = ThisTerm(@dmy);
+  
+    return undef unless $#term;
+   
+    my $dow = (localtime($tm))[6];
+
+    my $week = _FindWeek($tm, 1, $term[0], 9, $term[1] + ONE_WEEK);
+   
+    return ($_days[$dow], $week, $term[2], $term[3]) if ( wantarray );
+   
+    my $wsuffix = GetWeekSuffix($week);
+
+    return "$_days[$dow], $week$wsuffix week, $term[2] $term[3]."
+}
+
+sub ToOx_loose {
+    my (@dmy) = @_;
+    
+    # Are we in term ?
+    my @data = ToOx_strict(@dmy);
+    if ( $#data ) {
+        my $wsuffix = GetWeekSuffix($data[1]);
+        return wantarray ?
+            @data : "$data[0], $data[1]$wsuffix week, $data[2] $data[3].";
+    }
+   
+    # So make us work ...
+   
+    my $tm = Mktime((reverse @dmy), 0, 0, 0);
+    my @term = undef;
+    foreach my $ar ( sort { $a->[0] <=> $b->[0] } @_oxford_terms ) {
+        if ( $tm >= ( $ar->[0] - 3 * ONE_WEEK ) && 
+            $tm <  (  $ar->[1] + 3 * ONE_WEEK) )  {
+            @term = @{$ar};
+            last;
+        }
+    }
+    return undef unless $#term;
+
+    my $dow = (localtime($tm))[6];
+    my $week = _FindWeek($tm, -2, ($term[0] - 3 * ONE_WEEK), 11,
+                                                  $term[1] + 3 * ONE_WEEK);
+
+    return ($_days[$dow], $week, $term[2], $term[3]) if ( wantarray );
+   
+    my $wsuffix = GetWeekSuffix($week);
+    return "$_days[$dow], $week$wsuffix week, $term[2] $term[3]."
+}
+
 
 =head1 Functions
 
@@ -137,58 +225,74 @@ or an array
     
 depending on how it is called.
 
-On error, the text C<Out of range> or array C<("Out of range",)> is
-returned.
+If no data is available for the requested date, undef will be returned.
 
 =cut
 
 sub ToOx {
-    &_initcal unless defined $_initcal;
-    my ( $day, $month, $year ) = @_;
-    my $delta = 367;
-    my ( $tmp, $offset );
-    my @a;
-    my ($nearest);
-    die unless %db;
-    foreach ( keys %db ) {
-        eval { @a = Date::Calc::Decode_Date_EU( $db{$_} ) } or die;
-        next unless $a[2];
-        if (abs($delta)
-            > abs( $tmp = Date::Calc::Delta_Days( @a, $year, $month, $day ) )
-            )
-        {
-            $delta   = $tmp;
-            $nearest = $_;
-            $offset  = 1;
-        }
-        if (abs($delta) > abs(
-                $tmp = Date::Calc::Delta_Days(
-                    ( Date::Calc::Add_Delta_Days( @a, 7 * 7 ) ),
-                    $year, $month, $day
-                )
-            )
-            )
-        {
-            $delta   = $tmp;
-            $nearest = $_;
-            $offset  = 8;
-        }
+    my (@dmy, $options) = @_;
+    # XXX options parsing 
+
+    # Try full_term
+    # if full_term requested, return undef
+    # Try ext_term
+    # if ext_term requested, return undef
+    # Try nearest
+
+    # Are we in term ?
+    my @data = ToOx_strict(@dmy);
+
+    if ( $#data ) {
+        my $wsuffix = _get_week_suffix($data[1]);
+        return wantarray ?
+            @data : "$data[0], $data[1]$wsuffix week, $data[2] $data[3].";
     }
-    return wantarray ? ("Out of my range",) : "Out of my range"
-        if $delta == 367;
-    my $w = $offset + int( $delta / 7 );
-    $w -= 1 if $delta < 0 and $delta % 7;
-    if ( $delta < 0 ) { $delta = $delta % 7 - 7 }
-    else { $delta %= 7 }
-    my @days = qw(Sunday Monday Tuesday Wednesday Thursday Friday Saturday);
-    $day = $days[$delta];
-    my $wsuffix = "th";
-    abs($w) == 1 && ( $wsuffix = "st" );
-    abs($w) == 2 && ( $wsuffix = "nd" );
-    abs($w) == 3 && ( $wsuffix = "rd" );
-    return wantarray ? ($day, $w, split(/ /, $nearest))
-        : "$day, $w$wsuffix week, $nearest.";
+    # So make us work ...
+
+    my $tm = Mktime((reverse @dmy), 0, 0, 0);
+    my @terms = sort { $a->[0] <=> $b->[0] } @_oxford_terms;
+    my($prevterm,$nextterm);
+    my $curterm = shift @terms;
+
+    while ($curterm) { 
+         if ( $tm < $curterm->[0] ) {
+             if ( $prevterm && $tm >= ($prevterm->[1] + ONE_WEEK) ) {
+                 $nextterm = $curterm;
+                 last;
+             } else {
+                 return undef; # out of range 
+             }
+         } 
+         $prevterm = $curterm;
+         $curterm = shift @terms;
+    }
+    return undef unless $nextterm;
+
+    # We are in the gap between terms .. which one is closest?
+    my $prevgap = $tm - ($prevterm->[1] + ONE_WEEK);
+    my $nextgap = $tm - $nextterm->[0];
+
+    my $dow = (localtime($tm))[6];
+    my($week,@term);
+
+    if ( abs($prevgap) < abs($nextgap) ) {  # if equal go for -<n>th week
+        my $max_weeks = 8 +
+            int( ($nextterm->[0] - $prevterm->[1]) / (24 * 60 * 60 * 7) );
+        $week = _find_week($tm, 8, $prevterm->[1], $max_weeks, $nextterm->[0]);
+        @term = @{$prevterm};
+    } else {
+        my $delta = $nextgap / (24 * 60 * 60);
+        $week = 1 + int( $delta / 7 );
+        $week -= 1 if $delta % 7;
+        @term = @{$nextterm};
+    }
+
+    return ($_days[$dow], $week, $term[2], $term[3]) if ( wantarray );
+   
+    my $wsuffix = _get_week_suffix($week);
+    return "$_days[$dow], $week$wsuffix week, $term[2] $term[3]."
 }
+
 
 =item Parse($string)
 
@@ -203,7 +307,6 @@ This function is experimental.
 =cut
 
 sub Parse {
-    my @days   = qw(Sunday Monday Tuesday Wednesday Thursday Friday Saturday);
     my $string = shift;
     my $term   = "";
     my ( $day, $week, $year );
@@ -213,7 +316,7 @@ sub Parse {
     $string =~ s/week//g;
     my @terms = qw(Michaelmas Hilary Trinity);
     $string =~ s/(\d+)(?:rd|st|nd|th)/$1/;
-    my %ab = Text::Abbrev::abbrev( @days, @terms );
+    my %ab = Text::Abbrev::abbrev( @_days, @terms );
     my $expand;
     while ( $string =~ s/((?:\d|-)\d*)/ / ) {
         if ( $1 > 50 ) { $year = $1; $year += 1900 if $year < 1900; }
@@ -226,11 +329,11 @@ sub Parse {
             #my $foo=lc($_); $string=~s/\G$foo[a-z]*/ /i;
             $expand = $ab{$_};
             $term   = $expand if ( scalar( grep /$expand/, @terms ) > 0 );
-            $day    = $expand if ( scalar( grep /$expand/, @days ) > 0 );
+            $day    = $expand if ( scalar( grep /$expand/, @_days ) > 0 );
         }
     }
     unless ($day) {
-        %ab = Text::Abbrev::abbrev(@days);
+        %ab = Text::Abbrev::abbrev(@_days);
         foreach ( sort { length $b <=> length $a } keys %ab ) {
             if ( $string =~ /$_/ig ) {
                 pos($string) -= length($_);
@@ -271,7 +374,6 @@ form C<DD/MM/YYYY> or an error message.
 =cut
 
 sub FromOx {
-    my @days = qw(Sunday Monday Tuesday Wednesday Thursday Friday Saturday);
     my %lu;
     &_initcal unless defined $_initcal;
     my ( $year, $term, $week, $day );
@@ -281,7 +383,7 @@ sub FromOx {
     return "Out of range " unless exists $db{"$term $year"};
     {
         my $foo = 0;
-        %lu = ( map { $_, $foo++ } @days );
+        %lu = ( map { $_, $foo++ } @_days );
     }
     my $delta = 7 * ( $week - 1 ) + $lu{$day};
     my @start = Date::Calc::Decode_Date_EU( $db{"$term $year"} );
@@ -301,7 +403,7 @@ XXX what exactly?
 
 sub get_oxford_terms {
     &_initcal unless defined $_initcal;
-    \@oxford_terms;
+    \@_oxford_terms;
 }
 
 "A TRUE VALUE";

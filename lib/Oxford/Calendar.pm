@@ -129,9 +129,16 @@ Given a day, month and year in standard human format (that is, month is
 1-12, not 0-11, and year is four digits) will return a string of the
 form
 
-    Day, xth week, Term.
+    Day, xth week, Term year.
 
-or, on error, the text C<Out of range>.
+or an array
+
+    (Day, week of term, Term, year)
+    
+depending on how it is called.
+
+On error, the text C<Out of range> or array C<("Out of range",)> is
+returned.
 
 =cut
 
@@ -167,7 +174,8 @@ sub ToOx {
             $offset  = 8;
         }
     }
-    return "Out of my range" if $delta == 367;
+    return wantarray ? ("Out of my range",) : "Out of my range"
+        if $delta == 367;
     my $w = $offset + int( $delta / 7 );
     $w -= 1 if $delta < 0 and $delta % 7;
     if ( $delta < 0 ) { $delta = $delta % 7 - 7 }
@@ -178,7 +186,8 @@ sub ToOx {
     abs($w) == 1 && ( $wsuffix = "st" );
     abs($w) == 2 && ( $wsuffix = "nd" );
     abs($w) == 3 && ( $wsuffix = "rd" );
-    return "$day, $w$wsuffix week, $nearest.";
+    return wantarray ? ($day, $w, split(/ /, $nearest))
+        : "$day, $w$wsuffix week, $nearest.";
 }
 
 =item Parse($string)

@@ -3,4 +3,3 @@ Changes
 MANIFEST
 Makefile.PL
 t/test.pl
-META.yml                                 Module meta-data (added by MakeMaker)

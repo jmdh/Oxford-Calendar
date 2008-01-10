@@ -8,5 +8,6 @@ WriteMakefile(
     Text::Abbrev => 0,
     Date::Calc => 0,
     YAML => 0,
+    Time::Seconds => 0,
     }, # e.g., Module::Name => 1.1
 );

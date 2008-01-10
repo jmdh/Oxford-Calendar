@@ -1,33 +1,38 @@
 1.9   UNRELEASED
     - Improve documention to describe the Oxford date format and add
-      references to the University
+      references to the University (fixes RT#
     - Move Calendar.pm to lib/, and test.pl to t/ (and convert to using
       Test::More)
+    - General refactoring and cleanup
     - Changes from Aaron Wilson:
       - ToOx will return an array if called in that context
+      - ToOx can be called in multiple modes with different levels
+        of strictness
+    
+    INCOMPATIBLE CHANGES
+    ====================
+
+    - ToOx will return an array if wantarray is true; 
+      this will break code that does 'print ToOx(..)' directly
+    - ToOx will return undef, rather than the string "Out of range",
+      if there are no valid dates
 
 1.8   2007-05-27
     - New maintainer: Dominic Hargreaves <dom@cpan.org>
-
     - Convert built-in data to YAML and add more dates
-
     - Support reading data from an external YAML file
-
     - Remove support for fetching data from University web pages, as this
       functionality is fragile and has broken.
-
     - Run perltidy on Calendar.pm in line with
       Damien Conway's Best Practices
 
 1.7   2005-01-04
     - Corrected terms 2004-2006 (which were incorrectly given as 2003)
-
     - Term dates before 2004 are not shown on the OU website; always
       pre-load them
 
 1.6   2004-11-20
     - New maintainer: Eugene van der Pijll <pijll@cpan.org>
-
     - Added terms 2004-2006 to internal database
 
 2002-11-26 09:06  simon

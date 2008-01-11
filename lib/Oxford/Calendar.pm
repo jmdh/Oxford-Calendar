@@ -4,7 +4,7 @@
 # Dominic Hargreaves / University of Oxford (c) 2007
 # Artistic License
 package Oxford::Calendar;
-$Oxford::Calendar::VERSION = "1.9";
+$Oxford::Calendar::VERSION = "1.8_01";
 use strict;
 use Text::Abbrev;
 use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime);

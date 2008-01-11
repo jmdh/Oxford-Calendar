@@ -2,4 +2,4 @@ lib/Oxford/Calendar.pm
 Changes
 MANIFEST
 Makefile.PL
-t/test.pl
+t/00_all.t

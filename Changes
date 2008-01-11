@@ -7,12 +7,12 @@
     - Changes from Aaron Wilson:
       - ToOx will return an array if called in that context
       - ToOx can be called in multiple modes with different levels
-        of strictness
+        of strictness (fixes RT#27366).
     - The string returned by ToOx no longer has a trailing full stop.
     - Changes inspired by Janet McKnight:
       - The module calculates the Oxford terms from the definition laid
         out in University Regulations as well as the reckoning of dates
-        of full term.
+        of full term (also fixes RT#27366).
     - Reference to CPAN RT in documentation
     
     INCOMPATIBLE CHANGES

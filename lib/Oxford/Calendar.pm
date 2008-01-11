@@ -7,13 +7,21 @@ package Oxford::Calendar;
 $Oxford::Calendar::VERSION = "1.8_01";
 use strict;
 use Text::Abbrev;
-use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime);
+use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime Easter_Sunday Date_to_Days);
 use YAML;
 use Time::Seconds;
 
 use constant CALENDAR => '/etc/oxford-calendar.yaml';
 use constant SEVEN_WEEKS => 7 * ONE_WEEK;
 use constant DEFAULT_MODE => 'nearest';
+
+# Constants defined by University regulations
+use constant MICHAELMAS_START       => (10, 1);
+use constant MICHAELMAS_END         => (12, 17);
+use constant HILARY_START           => (1, 7);
+use constant HILARY_END_IF_EARLIER  => (3, 25);
+use constant TRINITY_START_IF_LATER => (4, 20);
+use constant TRINITY_END            => (7, 6);
 
 =head1 NAME
 
@@ -26,18 +34,42 @@ Oxford::Calendar - University of Oxford calendar conversion routines
 
 =head1 DESCRIPTION
 
-This module converts University of Oxford dates to and from Real World
-dates using data supplied in YAML format.
+This module converts University of Oxford dates (Oxford academic dates)
+to and from Real World dates, and provides information on Terms of the
+University.
 
-If the file F</etc/oxford-calendar.yaml> exists, data will be read from that;
-otherwise, built-in data will be used. The built-in data is periodically
-updated from the authoritative source at
+The Terms of the University are defined by the
+B<Regulations on the number and lengths of terms>, available online from
+
+L<http://www.admin.ox.ac.uk/examregs/03-00_REGULATIONS_ON_THE_NUMBER_AND_LENGTH_OF_TERMS.shtml>
+
+This document describes the start and end dates of Oxford Terms.
+
+In addition to this, the dates of Full Term, required to calculate the
+week number of the term, are prescribed by Council, and published
+periodically in the B<University Gazette>.
+
+Full term comprises weeks 1-8 inclusive, but sometimes, dates outside of
+full term are presented in the Oxford academic date format.
+This module will optionally provide such dates.
+
+Data for these prescribed dates may be supplied in the file
+F</etc/oxford-calendar.yaml>; if this file does not exist, built-in data
+will be used. The built-in data is periodically updated from the
+semi-authoritative source at
 
 L<http://www.ox.ac.uk/about_the_university/university_year/dates_of_term.html>.
 
+or the authoritative source, the Gazette, available online from
+
+L<http://www.ox.ac.uk/gazette/>.
+
+L<http://www.ox.ac.uk/about_the_university/university_year/index.html>
+describes the academic year at Oxford.
+
 =head1 DATE FORMAT
 
-An Oxford academic date takes the form
+An Oxford academic date has the following format:
 
 =over
 
@@ -67,15 +99,12 @@ Example:
 
 Friday, 8th Week, Michaelmas 2007
 
-L<http://www.ox.ac.uk/about_the_university/university_year/index.html>
-describes the academic year at Oxford.
-
 =cut
 
 our %db;
 
 my $_initcal;    # If this is true, we have our database of dates already.
-my @_oxford_terms;
+my @_oxford_full_terms;
 my @_days = qw(Sunday Monday Tuesday Wednesday Thursday Friday Saturday);
 
 sub _get_week_suffix {
@@ -133,18 +162,31 @@ sub _init_range {
              or die
                 "Could not decode date ($db{$termspec}) for term $termspec: $@";
 
-        push @_oxford_terms,
+        push @_oxford_full_terms,
             [$time, ($time + SEVEN_WEEKS), split(/ /, $termspec)];
     }
 
     # Sort this here, but do not rely on it later
-    @_oxford_terms = sort { $a->[0] <=> $b->[0] } @_oxford_terms;
+    @_oxford_full_terms = sort { $a->[0] <=> $b->[0] } @_oxford_full_terms;
 }
 
 sub _fmt_oxdate_as_string {
     my ( $dow, $week, @term ) = @_;
     my $wsuffix = _get_week_suffix($week);
-    return "$_days[$dow], $week$wsuffix week, $term[2] $term[3].";
+    return "$_days[$dow], $week$wsuffix week, $term[2] $term[3]";
+}
+
+sub _increment_term { 
+    my ( $term, $year );
+    if ( $term eq 'Michaelmas' ) { 
+        return 'Hilary', $year + 1;
+    } elsif ( $term eq 'Hilary' ) { 
+        return 'Trinity', $year;
+    } elsif ( $term eq 'Trinity' ) {
+        return 'Michaelmas', $year;
+    } else {
+        die "_increment_term: Unknown term $term";
+    }
 }
 
 sub Init {
@@ -163,7 +205,7 @@ Given a day, month and year in standard human format (that is, month is
 1-12, not 0-11, and year is four digits) will return a string of the
 form
 
-    Day, xth week, Term year.
+    Day, xth week, Term year
 
 or an array
 
@@ -218,16 +260,17 @@ sub ToOx {
     my $dow = (localtime($tm))[6];
 
     # Try full_term
-    @term = ThisTerm(@dmy);
+    @term = ThisTerm(reverse @dmy);
     if ( $#term ) {
         # We're in full term
+        # XXX not any more, ThisTerm works with statutory terms now
         $week = _find_week($tm, 1, $term[0], 9, $term[1] + ONE_WEEK);
         return ($_days[$dow], $week, $term[2], $term[3]) if ( wantarray );
         return _fmt_oxdate_as_string( $dow, $week, @term );
     } else {
         return undef if $mode eq 'full_term';
         # Try ext_term
-        foreach my $ar ( sort { $a->[0] <=> $b->[0] } @_oxford_terms ) {
+        foreach my $ar ( sort { $a->[0] <=> $b->[0] } @_oxford_full_terms ) {
             if ( $tm >= ( $ar->[0] - 3 * ONE_WEEK ) &&
                  $tm <  (  $ar->[1] + 3 * ONE_WEEK) )  {
                 @term = @{$ar};
@@ -243,7 +286,7 @@ sub ToOx {
         } else {
             return undef if $mode eq 'ext_term';
             # Try nearest
-            my @terms = sort { $a->[0] <=> $b->[0] } @_oxford_terms;
+            my @terms = sort { $a->[0] <=> $b->[0] } @_oxford_full_terms;
             my($prevterm,$nextterm);
             my $curterm = shift @terms;
 
@@ -283,76 +326,117 @@ sub ToOx {
     }
 }
 
-=item ThisTerm($day, $month, $year)
+=item ThisTerm($year, $month, $day)
 
-Given a day, month and year in standard human format (that is, month is
+Given a year, month, term in standard human format (that is, month is
 1-12, not 0-11, and year is four digits) will returns the current term
-or undef if in vacation or unknown.. The term is either a string or
-(term, year) depending on context.
+or undef if in vacation or unknown. The term is given as an array in the
+form (year, term)
 
 =cut
 
 sub ThisTerm {
-   Init unless defined $_initcal;
-
-   my @dmy = @_;
-   my $tm;
-   if ( $#dmy ) {
-       $tm = Mktime( (reverse @dmy), 0,0,0)
-   } else {
-       $tm = time()
-   }
-
-   foreach my $ar ( sort { $a->[0] <=> $b->[0] } @_oxford_terms ) {
-       return wantarray ? @$ar : "$ar->[2] $ar->[3]"
-           if ( $tm >= $ar->[0] && $tm < ($ar->[1] + ONE_WEEK) );
-       last if $tm <= $ar->[0]; # there is no point carrying on if we reach here
-   }
-
-   return undef;
+    my ( $year, $month, $day ) = @_;
+    my $term_dates = StatutoryTermDates( $year );
+    foreach my $term ( keys %{$term_dates} ) {
+        my $start = Date_to_Days( @{$term_dates->{$term}->{start}} );
+        my $end = Date_to_Days( @{$term_dates->{$term}->{end}} );
+        my $date = Date_to_Days( $year, $month, $day );
+        if ( ( $date >= $start ) && ( $date <= $end )) {
+            return ( $year, $term );
+        }
+    }
+    return undef;
 }
 
-=item NextTerm($day, $month, $year)
+=item NextTerm($year, $month, $day)
 
 Given a day, month and year in standard human format (that is, month is
-1-12, not 0-11, and year is four digits) will returns the next term (if
-this is is known to the module) or undef. The term is either a string or
-(term, year) depending on context.
+1-12, not 0-11, and year is four digits) will return the next term.
+The term is given as an array in the form (term, year)
 
 =cut
 
 sub NextTerm {
-   Init unless defined $_initcal;
-
-   my @dmy = @_;
-   my $tm;
-   if ( $#dmy ) {
-       $tm = Mktime( (reverse @dmy), 0,0,0)
-   }
-   else {
-       $tm = time()
-   }
-
-   my @tterms = sort { $a->[0] <=> $b->[0] } @_oxford_terms;
-   my $tdata = shift @tterms;
-   while ( $tdata ) {
-       my $eot = $tdata->[1] + ONE_WEEK;
-       my $next = shift @tterms;
-
-       # It is easy if we are within a term
-       if ( $tm >= $tdata->[0] && $tm <= $eot ) {
-           return wantarray ?  @$next : "$next->[2] $next->[3]";
-       }
-
-       if ( $tm < $tdata->[0] ) { # Vacation time
-           return wantarray ?  @$tdata : "$tdata->[2] $tdata->[3]";
-       }
-
-       $tdata = $next;
-   }
-
-   return undef;
+    my @date = @_;
+    my @next_term;
+    my @this_term = ThisTerm( @date );
+    if ( $#this_term ) {
+        @next_term = _increment_term( @this_term );
+    } else {
+        my @test_date = @date;
+        until ( $#next_term ) {
+            @date = Date::Calc::Add_Delta_Days( @date, 1 );
+            @next_term = ThisTerm( @date );
+        }
+    }
+    return @next_term;
 }
+
+=item StatutoryTermDates($year)
+
+Returns a hash reference keyed on terms for a given year, the value of
+each being a hash reference containing start and end dates for that term.
+The dates are stored as array references containing numeric
+year, month, day values.
+
+=cut
+
+sub StatutoryTermDates {
+    my $year = shift;
+    die "StatutoryTermDates: no year given" unless $year;
+    
+    # Calculate end of Hilary
+    my @palm_sunday =
+        Date::Calc::Add_Delta_Days( Date::Calc::Easter_Sunday( $year ), -7 );
+    my @saturday_before_palm_sunday =
+        Date::Calc::Add_Delta_Days( @palm_sunday, -6 );
+
+    my $hilary_delta = Date::Calc::Delta_Days(
+                            $year, HILARY_END_IF_EARLIER,
+                            @saturday_before_palm_sunday
+    );
+
+    my @hilary_end;
+    if ( $hilary_delta == 1 ) {
+        @hilary_end = HILARY_END_IF_EARLIER;
+    } else {
+        @hilary_end = @saturday_before_palm_sunday;
+    }
+    
+    # Calculate start of Trinity
+    my @wednesday_after_easter_sunday =
+        Date::Calc::Add_Delta_Days( Date::Calc::Easter_Sunday( $year ), 3 );
+
+    my $trinity_delta = Date::Calc::Delta_Days(
+                            @wednesday_after_easter_sunday,
+                            $year, TRINITY_START_IF_LATER
+    );
+
+    my @trinity_start;
+    if ( $trinity_delta == 1 ) {
+        @trinity_start = TRINITY_START_IF_LATER;
+    } else {
+        @trinity_start = @wednesday_after_easter_sunday;
+    }
+
+    my $term_dates = {
+        Michaelmas => {
+            start => [$year, MICHAELMAS_START],
+            end   => [$year, MICHAELMAS_END]
+        },
+        Hilary => {
+            start => [$year, HILARY_START],
+            end   => [@hilary_end]
+        },
+        Trinity => {
+            start => [@trinity_start],
+            end   => [$year, TRINITY_END]
+        }
+    };
+    return $term_dates;
+}
+
 
 =item Parse($string)
 
@@ -434,6 +518,8 @@ form C<DD/MM/YYYY> or an error message.
 =cut
 
 sub FromOx {
+
+    # XXX need to handle strict mode?
     my %lu;
     Init unless defined $_initcal;
     my ( $year, $term, $week, $day );
@@ -453,21 +539,27 @@ sub FromOx {
 
 }
 
-=item GetOxfordTerms
+=item GetOxfordFullTerms
 
 Returns a reference to an array containing a reference to an array for each
-term known about in the database; each inner array contains the unixtime of
+full term known about in the database; each inner array contains the unixtime of
 midnight on Sunday of 1st Week, the unixtime of midnight on Sunday of 8th
 week, the term name, and the year.
 
 =cut
 
-sub GetOxfordTerms {
+sub GetOxfordFullTerms {
     Init unless defined $_initcal;
-    \@_oxford_terms;
+    \@_oxford_full_terms;
 }
 
 "A TRUE VALUE";
+
+=head1 BUGS
+
+Bugs may be browsed and submitted at
+
+L<http://rt.cpan.org/Public/Dist/Display.html?Name=Oxford-Calendar>
 
 =head1 AUTHOR
 

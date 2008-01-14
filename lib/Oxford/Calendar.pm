@@ -14,6 +14,8 @@ use Time::Seconds;
 use constant CALENDAR => '/etc/oxford-calendar.yaml';
 use constant SEVEN_WEEKS => 7 * ONE_WEEK;
 use constant DEFAULT_MODE => 'nearest';
+use constant TERMS => qw(Michaelmas Hilary Trinity);
+use constant DAYS => qw(Sunday Monday Tuesday Wednesday Thursday Friday Saturday);
 
 # Constants defined by University regulations
 use constant MICHAELMAS_START       => (10, 1);
@@ -105,7 +107,6 @@ our %db;
 
 my $_initcal;    # If this is true, we have our database of dates already.
 my @_oxford_full_terms;
-my @_days = qw(Sunday Monday Tuesday Wednesday Thursday Friday Saturday);
 
 sub _get_week_suffix {
     my $week = shift;
@@ -455,9 +456,8 @@ sub Parse {
 
     $string = lc($string);
     $string =~ s/week//g;
-    my @terms = qw(Michaelmas Hilary Trinity);
     $string =~ s/(\d+)(?:rd|st|nd|th)/$1/;
-    my %ab = Text::Abbrev::abbrev( @_days, @terms );
+    my %ab = Text::Abbrev::abbrev( DAYS, TERMS );
     my $expand;
     while ( $string =~ s/((?:\d|-)\d*)/ / ) {
         if ( $1 > 50 ) { $year = $1; $year += 1900 if $year < 1900; }
@@ -469,12 +469,12 @@ sub Parse {
             #pos($string)-=length($_);
             #my $foo=lc($_); $string=~s/\G$foo[a-z]*/ /i;
             $expand = $ab{$_};
-            $term   = $expand if ( scalar( grep /$expand/, @terms ) > 0 );
-            $day    = $expand if ( scalar( grep /$expand/, @_days ) > 0 );
+            $term   = $expand if ( scalar( grep /$expand/, TERMS ) > 0 );
+            $day    = $expand if ( scalar( grep /$expand/, DAYS ) > 0 );
         }
     }
     unless ($day) {
-        %ab = Text::Abbrev::abbrev(@_days);
+        %ab = Text::Abbrev::abbrev(DAYS);
         foreach ( sort { length $b <=> length $a } keys %ab ) {
             if ( $string =~ /$_/ig ) {
                 pos($string) -= length($_);
@@ -485,7 +485,7 @@ sub Parse {
         }
     }
     unless ($term) {
-        %ab = Text::Abbrev::abbrev(@terms);
+        %ab = Text::Abbrev::abbrev(TERMS);
         foreach ( sort { length $b <=> length $a } keys %ab ) {
             if ( $string =~ /$_/ig ) {
                 pos($string) -= length($_);
@@ -515,8 +515,6 @@ form C<DD/MM/YYYY> or undef.
 =cut
 
 sub FromOx {
-
-    # XXX need to handle strict mode?
     my %lu;
     Init unless defined $_initcal;
     my ( $year, $term, $week, $day );
@@ -526,14 +524,13 @@ sub FromOx {
     return undef unless exists $db{"$term $year"};
     {
         my $foo = 0;
-        %lu = ( map { $_, $foo++ } @_days );
+        %lu = ( map { $_, $foo++ } DAYS );
     }
     my $delta = 7 * ( $week - 1 ) + $lu{$day};
     my @start = _sunday_of_first( $year, $term );
     die "The internal database is bad for $term $year"
         unless $start[0];
     return join "/", reverse( Date::Calc::Add_Delta_Days( @start, $delta ) );
-
 }
 
 "A TRUE VALUE";

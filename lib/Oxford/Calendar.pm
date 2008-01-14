@@ -106,6 +106,7 @@ Friday, 8th Week, Michaelmas 2007
 our %db;
 
 my $_initcal;    # If this is true, we have our database of dates already.
+my $_initrange;
 my @_oxford_full_terms;
 
 sub _get_week_suffix {
@@ -159,6 +160,7 @@ sub _init_range {
 
     # Sort this here, but do not rely on it later
     @_oxford_full_terms = sort { $a->[0] <=> $b->[0] } @_oxford_full_terms;
+    $_initrange++;
 }
 
 sub _fmt_oxdate_as_string {
@@ -192,7 +194,7 @@ sub _to_ox_nearest {
     my @date = @_;
     my $week;
     my @term;
-    Init() unless defined $_initcal;
+    _init_range() unless defined $_initrange;
     my $dow = Day_of_Week_to_Text( Day_of_Week( @date ) );
     my $tm = Mktime((@date), 0, 0, 0);
     my @terms = sort { $a->[0] <=> $b->[0] } @_oxford_full_terms;
@@ -234,7 +236,6 @@ sub _to_ox_nearest {
 
 sub Init {
     _init_db;
-    _init_range;
     Date::Calc::Language(Date::Calc::Decode_Language('English'));
     $_initcal++;
 }

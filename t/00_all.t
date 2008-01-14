@@ -36,6 +36,7 @@ is( Oxford::Calendar::ToOx(12, 1, 2008, { mode => 'ext_term' } ),
     'Saturday, 0th week, Hilary 2008' );
 is( Oxford::Calendar::ToOx(1, 1, 2008, { mode => 'ext_term' } ), undef );
 
+# NextTerm
 my @next_term = Oxford::Calendar::NextTerm( 2008, 1, 1 );
 is( $next_term[0], 2008 );
 is( $next_term[1], 'Hilary' );

@@ -10,6 +10,7 @@ use Text::Abbrev;
 use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime Easter_Sunday Date_to_Days);
 use YAML;
 use Time::Seconds;
+use Smart::Comments;
 
 use constant CALENDAR => '/etc/oxford-calendar.yaml';
 use constant SEVEN_WEEKS => 7 * ONE_WEEK;
@@ -123,22 +124,12 @@ sub _find_week {
     my $sweek = shift;
     my $sweek_tm = shift;
 
-    my $max_week = shift;
-    my $max_tm = shift;
-
     my $eow = $sweek_tm + ONE_WEEK;
 
     while ( $tm >= $eow ) {
         $eow += ONE_WEEK;
         $sweek++;
     }
-    # Sanity Check
-    die "_find_week: $sweek is longer than max weeks ($max_week)"
-        if ( $sweek >= $max_week );
-
-    die "_find_week: $eow is after the end of term ($max_tm)"
-        if ( $eow > $max_tm);
-   
     return $sweek;
 }
 
@@ -173,7 +164,7 @@ sub _init_range {
 sub _fmt_oxdate_as_string {
     my ( $dow, $week, @term ) = @_;
     my $wsuffix = _get_week_suffix($week);
-    return "$_days[$dow], $week$wsuffix week, $term[2] $term[3]";
+    return "$_days[$dow], $week$wsuffix week, $term[1] $term[0]";
 }
 
 sub _increment_term { 
@@ -255,74 +246,63 @@ sub ToOx {
     ($dmy[0], $dmy[1], $dmy[2], $options) = @_;
     my $mode = $options->{mode} || DEFAULT_MODE;
     my ($week, @term);
+    my @date = reverse @dmy;
     Init unless defined $_initcal;
-    my $tm = Mktime((reverse @dmy), 0, 0, 0);
+    my $tm = Mktime((@date), 0, 0, 0);
     my $dow = (localtime($tm))[6];
 
-    # Try full_term
-    @term = ThisTerm(reverse @dmy);
+    @term = ThisTerm(@date);
     if ( $#term ) {
-        # We're in full term
-        # XXX not any more, ThisTerm works with statutory terms now
-        $week = _find_week($tm, 1, $term[0], 9, $term[1] + ONE_WEEK);
-        return ($_days[$dow], $week, $term[2], $term[3]) if ( wantarray );
+        # We're in term
+        my @term_start = Decode_Date_EU($db{"$term[1] $term[0]"});
+        return undef unless ( $#term_start );
+        my $days_from_start = Delta_Days( @term_start, @date );
+        my $week_offset = $days_from_start < 0 ? 0 : 1;
+        my $week = int( $days_from_start / 7 ) + $week_offset;
+        return undef if ( ( $week < 1 || $week > 8 ) && $mode eq 'full_term' );
+        return ( $_days[$dow], $week, $term[1], $term[0] ) if ( wantarray );
         return _fmt_oxdate_as_string( $dow, $week, @term );
     } else {
-        return undef if $mode eq 'full_term';
-        # Try ext_term
-        foreach my $ar ( sort { $a->[0] <=> $b->[0] } @_oxford_full_terms ) {
-            if ( $tm >= ( $ar->[0] - 3 * ONE_WEEK ) &&
-                 $tm <  (  $ar->[1] + 3 * ONE_WEEK) )  {
-                @term = @{$ar};
-                last;
-            }
-        }
-        if ( $#term ) {
-            $week = _find_week($tm, -2, ($term[0] - 3 * ONE_WEEK), 11,
-                $term[1] + 3 * ONE_WEEK);
+        # XXX fix up
+        return undef;
+        return undef if $mode eq 'ext_term';
+        # We're not in term time; try nearest
+        my @terms = sort { $a->[0] <=> $b->[0] } @_oxford_full_terms;
+        my ( $prevterm, $nextterm );
+        my $curterm = shift @terms;
 
-            return ($_days[$dow], $week, $term[2], $term[3]) if ( wantarray );
-            return _fmt_oxdate_as_string( $dow, $week, @term );
+        while ($curterm) { 
+            if ( $tm < $curterm->[0] ) {
+                if ( $prevterm && $tm >= ($prevterm->[1] + ONE_WEEK) ) {
+                    $nextterm = $curterm;
+                    last;
+                } else {
+                    return undef; # out of range 
+                }
+            } 
+            $prevterm = $curterm;
+            $curterm = shift @terms;
+        }
+        return undef unless $nextterm;
+
+        # We are in the gap between terms .. which one is closest?
+        my $prevgap = $tm - ($prevterm->[1] + ONE_WEEK);
+        my $nextgap = $tm - $nextterm->[0];
+
+        if ( abs($prevgap) < abs($nextgap) ) {
+            # if equal go for -<n>th week
+            my $max_weeks = 8 + int( ($nextterm->[0] - $prevterm->[1]) / (24 * 60 * 60 * 7) );
+            $week = _find_week($tm, 8, $prevterm->[1], $max_weeks, $nextterm->[0]);
+            @term = @{$prevterm};
         } else {
-            return undef if $mode eq 'ext_term';
-            # Try nearest
-            my @terms = sort { $a->[0] <=> $b->[0] } @_oxford_full_terms;
-            my($prevterm,$nextterm);
-            my $curterm = shift @terms;
-
-            while ($curterm) { 
-                if ( $tm < $curterm->[0] ) {
-                    if ( $prevterm && $tm >= ($prevterm->[1] + ONE_WEEK) ) {
-                        $nextterm = $curterm;
-                        last;
-                    } else {
-                        return undef; # out of range 
-                    }
-                } 
-                $prevterm = $curterm;
-                $curterm = shift @terms;
-            }
-            return undef unless $nextterm;
-
-            # We are in the gap between terms .. which one is closest?
-            my $prevgap = $tm - ($prevterm->[1] + ONE_WEEK);
-            my $nextgap = $tm - $nextterm->[0];
-
-            if ( abs($prevgap) < abs($nextgap) ) {
-                # if equal go for -<n>th week
-                my $max_weeks = 8 + int( ($nextterm->[0] - $prevterm->[1]) / (24 * 60 * 60 * 7) );
-                $week = _find_week($tm, 8, $prevterm->[1], $max_weeks, $nextterm->[0]);
-                @term = @{$prevterm};
-            } else {
-                my $delta = $nextgap / (24 * 60 * 60);
-                $week = 1 + int( $delta / 7 );
-                $week -= 1 if $delta % 7;
-                @term = @{$nextterm};
-            }
-
-            return ($_days[$dow], $week, $term[2], $term[3]) if ( wantarray );
-            return _fmt_oxdate_as_string( $dow, $week, @term );
+            my $delta = $nextgap / (24 * 60 * 60);
+            $week = 1 + int( $delta / 7 );
+            $week -= 1 if $delta % 7;
+            @term = @{$nextterm};
         }
+
+        return ($_days[$dow], $week, $term[2], $term[3]) if ( wantarray );
+        return _fmt_oxdate_as_string( $dow, $week, @term );
     }
 }
 
@@ -352,7 +332,8 @@ sub ThisTerm {
 =item NextTerm($year, $month, $day)
 
 Given a day, month and year in standard human format (that is, month is
-1-12, not 0-11, and year is four digits) will return the next term.
+1-12, not 0-11, and year is four digits) will return the next term (whether
+or not the date given is in term time).
 The term is given as an array in the form (term, year)
 
 =cut
@@ -365,9 +346,9 @@ sub NextTerm {
         @next_term = _increment_term( @this_term );
     } else {
         my @test_date = @date;
-        until ( $#next_term ) {
-            @date = Date::Calc::Add_Delta_Days( @date, 1 );
-            @next_term = ThisTerm( @date );
+        while ( scalar @next_term != 2 ) {
+            @test_date = Date::Calc::Add_Delta_Days( @test_date, 1 );
+            @next_term = ThisTerm( @test_date );
         }
     }
     return @next_term;
@@ -379,6 +360,8 @@ Returns a hash reference keyed on terms for a given year, the value of
 each being a hash reference containing start and end dates for that term.
 The dates are stored as array references containing numeric
 year, month, day values.
+
+Note: these are the statutory term dates, not full term dates.
 
 =cut
 
@@ -399,7 +382,7 @@ sub StatutoryTermDates {
 
     my @hilary_end;
     if ( $hilary_delta == 1 ) {
-        @hilary_end = HILARY_END_IF_EARLIER;
+        @hilary_end = ( $year, HILARY_END_IF_EARLIER );
     } else {
         @hilary_end = @saturday_before_palm_sunday;
     }
@@ -415,7 +398,7 @@ sub StatutoryTermDates {
 
     my @trinity_start;
     if ( $trinity_delta == 1 ) {
-        @trinity_start = TRINITY_START_IF_LATER;
+        @trinity_start = ( $year, TRINITY_START_IF_LATER );
     } else {
         @trinity_start = @wednesday_after_easter_sunday;
     }
@@ -442,8 +425,8 @@ sub StatutoryTermDates {
 
 Takes a free-form description of an Oxford calendar date, and attempts
 to divine the expected meaning. If the name of a term is not found, the
-current term will be assumed. If the description is unparsable, the text
-C<"UNPARSABLE"> is returned.  Otherwise, output is of the form
+current term will be assumed. If the description is unparsable, undef
+is returned.  Otherwise, an array will be returned of the form
 C<($year,$term,$week,$day)>
 
 This function is experimental.
@@ -506,7 +489,7 @@ sub Parse {
         $term =~ s/.*eek,\s+(\w+).*/$1/;
     }
     $year = ( Date::Calc::Today() )[0] unless $year;
-    return "UNPARSABLE" unless defined $week and defined $day;
+    return undef unless defined $week and defined $day;
     return ( $year, $term, $week, $day );
 }
 
@@ -537,20 +520,6 @@ sub FromOx {
         unless $start[0];
     return join "/", reverse( Date::Calc::Add_Delta_Days( @start, $delta ) );
 
-}
-
-=item GetOxfordFullTerms
-
-Returns a reference to an array containing a reference to an array for each
-full term known about in the database; each inner array contains the unixtime of
-midnight on Sunday of 1st Week, the unixtime of midnight on Sunday of 8th
-week, the term name, and the year.
-
-=cut
-
-sub GetOxfordFullTerms {
-    Init unless defined $_initcal;
-    \@_oxford_full_terms;
 }
 
 "A TRUE VALUE";

@@ -179,6 +179,14 @@ sub _increment_term {
     }
 }
 
+sub _sunday_of_first {
+    my ( $year, $term ) = @_;
+    Init() unless defined $_initcal;
+    my $date = $db{"$term $year"};
+    die "_sunday_of_first: undefined term start for $term, $year" unless $date;
+    return Decode_Date_EU($date);
+}
+
 sub Init {
     _init_db;
     _init_range;
@@ -225,12 +233,12 @@ term (as defined by the web page above).
 =item ext_term
 
 Term dates will only be returned if the date requested is part of an extended
-term (roughly as defined by the web page above).
+term, or statutory term.
 
 =item nearest
 
 Will return term dates based on the nearest term, even if the date requested
-is not part of a valid term (ie will include fictonal week numbers).
+is not part of an extended term (i.e. will include fictional week numbers).
 
 This is currently the default behaviour, for backwards compatibility with
 previous releases; this may be changed in future.
@@ -252,7 +260,7 @@ sub ToOx {
     @term = ThisTerm( @date );
     if ( $#term ) {
         # We're in term
-        my @term_start = Decode_Date_EU($db{"$term[1] $term[0]"});
+        my @term_start = _sunday_of_first( @term );
         return undef unless ( $#term_start );
         my $days_from_start = Delta_Days( @term_start, @date );
         my $week_offset = $days_from_start < 0 ? 0 : 1;
@@ -492,7 +500,7 @@ sub Parse {
 =item FromOx($year, $term, $week, $day)
 
 Converts an Oxford date into a Georgian date, returning a string of the
-form C<DD/MM/YYYY> or an error message.
+form C<DD/MM/YYYY> or undef.
 
 =cut
 
@@ -505,14 +513,14 @@ sub FromOx {
     ( $year, $term, $week, $day ) = @_;
     $year =~ s/\s//g;
     $term =~ s/\s//g;
-    return "Out of range " unless exists $db{"$term $year"};
+    return undef unless exists $db{"$term $year"};
     {
         my $foo = 0;
         %lu = ( map { $_, $foo++ } @_days );
     }
     my $delta = 7 * ( $week - 1 ) + $lu{$day};
-    my @start = Date::Calc::Decode_Date_EU( $db{"$term $year"} );
-    return "The internal database is bad for $term $year"
+    my @start = _sunday_of_first( $year, $term );
+    die "The internal database is bad for $term $year"
         unless $start[0];
     return join "/", reverse( Date::Calc::Add_Delta_Days( @start, $delta ) );
 

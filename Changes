@@ -14,19 +14,17 @@
         out in University Regulations as well as the reckoning of dates
         of full term (also fixes RT#27366).
     - Reference to CPAN RT in documentation
-    - Parse returns undef, rather than "UNPARSABLE", if it cannot parse
-      the date
+    - ToOx, FromOx and Parse will return undef, rather than error strings
+      if there are no valid dates available or the date cannot be parsed
     
     INCOMPATIBLE CHANGES
     ====================
 
     - ToOx will return an array if wantarray is true; 
       this will break code that does 'print ToOx(..)' directly
-    - ToOx will return undef, rather than the string "Out of range",
-      if there are no valid dates available
+    - ToOx, FromOx and Parse will return undef, rather than error strings
+      if there are no valid dates available or the date cannot be parsed
     - The string returned by ToOx no longer has a trailing full stop.
-    - Parse returns undef, rather than "UNPARSABLE", if it cannot parse
-      the date
 
 1.8   2007-05-27
     - New maintainer: Dominic Hargreaves <dom@cpan.org>

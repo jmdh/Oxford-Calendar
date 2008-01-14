@@ -7,10 +7,9 @@ package Oxford::Calendar;
 $Oxford::Calendar::VERSION = "1.8_01";
 use strict;
 use Text::Abbrev;
-use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime Easter_Sunday Date_to_Days);
+use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime Easter_Sunday Date_to_Days Day_of_Week_to_Text Day_of_Week);
 use YAML;
 use Time::Seconds;
-use Smart::Comments;
 
 use constant CALENDAR => '/etc/oxford-calendar.yaml';
 use constant SEVEN_WEEKS => 7 * ONE_WEEK;
@@ -162,19 +161,19 @@ sub _init_range {
 }
 
 sub _fmt_oxdate_as_string {
-    my ( $dow, $week, @term ) = @_;
+    my ( $dow, $week, $term, $year ) = @_;
     my $wsuffix = _get_week_suffix($week);
-    return "$_days[$dow], $week$wsuffix week, $term[1] $term[0]";
+    return "$dow, $week$wsuffix week, $term $year";
 }
 
 sub _increment_term { 
-    my ( $term, $year );
+    my ( $year, $term ) = @_;
     if ( $term eq 'Michaelmas' ) { 
-        return 'Hilary', $year + 1;
+        return $year + 1, 'Hilary';
     } elsif ( $term eq 'Hilary' ) { 
-        return 'Trinity', $year;
+        return $year, 'Trinity'
     } elsif ( $term eq 'Trinity' ) {
-        return 'Michaelmas', $year;
+        return $year, 'Michaelmas';
     } else {
         die "_increment_term: Unknown term $term";
     }
@@ -183,6 +182,7 @@ sub _increment_term {
 sub Init {
     _init_db;
     _init_range;
+    Date::Calc::Language(Date::Calc::Decode_Language('English'));
     $_initcal++;
 }
 
@@ -248,10 +248,8 @@ sub ToOx {
     my ($week, @term);
     my @date = reverse @dmy;
     Init unless defined $_initcal;
-    my $tm = Mktime((@date), 0, 0, 0);
-    my $dow = (localtime($tm))[6];
-
-    @term = ThisTerm(@date);
+    my $dow = Day_of_Week_to_Text( Day_of_Week( @date ) );
+    @term = ThisTerm( @date );
     if ( $#term ) {
         # We're in term
         my @term_start = Decode_Date_EU($db{"$term[1] $term[0]"});
@@ -260,13 +258,13 @@ sub ToOx {
         my $week_offset = $days_from_start < 0 ? 0 : 1;
         my $week = int( $days_from_start / 7 ) + $week_offset;
         return undef if ( ( $week < 1 || $week > 8 ) && $mode eq 'full_term' );
-        return ( $_days[$dow], $week, $term[1], $term[0] ) if ( wantarray );
-        return _fmt_oxdate_as_string( $dow, $week, @term );
+        return ( $dow, $week, $term[1], $term[0] ) if ( wantarray );
+        return _fmt_oxdate_as_string( $dow, $week, $term[1], $term[0] );
     } else {
-        # XXX fix up
-        return undef;
+        return undef if $mode eq 'full_term';
         return undef if $mode eq 'ext_term';
         # We're not in term time; try nearest
+        my $tm = Mktime((@date), 0, 0, 0);
         my @terms = sort { $a->[0] <=> $b->[0] } @_oxford_full_terms;
         my ( $prevterm, $nextterm );
         my $curterm = shift @terms;
@@ -291,8 +289,7 @@ sub ToOx {
 
         if ( abs($prevgap) < abs($nextgap) ) {
             # if equal go for -<n>th week
-            my $max_weeks = 8 + int( ($nextterm->[0] - $prevterm->[1]) / (24 * 60 * 60 * 7) );
-            $week = _find_week($tm, 8, $prevterm->[1], $max_weeks, $nextterm->[0]);
+            $week = _find_week( $tm, 8, $prevterm->[1] );
             @term = @{$prevterm};
         } else {
             my $delta = $nextgap / (24 * 60 * 60);
@@ -300,9 +297,8 @@ sub ToOx {
             $week -= 1 if $delta % 7;
             @term = @{$nextterm};
         }
-
-        return ($_days[$dow], $week, $term[2], $term[3]) if ( wantarray );
-        return _fmt_oxdate_as_string( $dow, $week, @term );
+        return ($dow, $week, $term[2], $term[3]) if ( wantarray );
+        return _fmt_oxdate_as_string( $dow, $week, $term[2], $term[3] );
     }
 }
 
@@ -334,7 +330,7 @@ sub ThisTerm {
 Given a day, month and year in standard human format (that is, month is
 1-12, not 0-11, and year is four digits) will return the next term (whether
 or not the date given is in term time).
-The term is given as an array in the form (term, year)
+The term is given as an array in the form (year, term)
 
 =cut
 
@@ -342,12 +338,12 @@ sub NextTerm {
     my @date = @_;
     my @next_term;
     my @this_term = ThisTerm( @date );
-    if ( $#this_term ) {
+    if ( @this_term == 2 ) {
         @next_term = _increment_term( @this_term );
     } else {
         my @test_date = @date;
-        while ( scalar @next_term != 2 ) {
-            @test_date = Date::Calc::Add_Delta_Days( @test_date, 1 );
+        while ( @next_term != 2 ) {
+            @test_date = Add_Delta_Days( @test_date, 1 );
             @next_term = ThisTerm( @test_date );
         }
     }

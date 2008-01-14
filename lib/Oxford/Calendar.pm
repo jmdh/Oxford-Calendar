@@ -187,6 +187,50 @@ sub _sunday_of_first {
     return Decode_Date_EU($date);
 }
 
+sub _to_ox_nearest {
+    my @date = @_;
+    my $week;
+    my @term;
+    Init() unless defined $_initcal;
+    my $dow = Day_of_Week_to_Text( Day_of_Week( @date ) );
+    my $tm = Mktime((@date), 0, 0, 0);
+    my @terms = sort { $a->[0] <=> $b->[0] } @_oxford_full_terms;
+    my ( $prevterm, $nextterm );
+    my $curterm = shift @terms;
+
+    while ($curterm) {
+        if ( $tm < $curterm->[0] ) {
+            if ( $prevterm && $tm >= ($prevterm->[1] + ONE_WEEK) ) {
+                $nextterm = $curterm;
+                last;
+            } else {
+                return undef; # out of range 
+            }
+        }
+        $prevterm = $curterm;
+        $curterm = shift @terms;
+    }
+    return undef unless $nextterm;
+
+    # We are in the gap between terms .. which one is closest?
+    my $prevgap = $tm - ($prevterm->[1] + ONE_WEEK);
+    my $nextgap = $tm - $nextterm->[0];
+
+    if ( abs($prevgap) < abs($nextgap) ) {
+        # if equal go for -<n>th week
+        $week = _find_week( $tm, 8, $prevterm->[1] );
+        @term = @{$prevterm};
+    } else {
+        my $delta = $nextgap / (24 * 60 * 60);
+        $week = 1 + int( $delta / 7 );
+        $week -= 1 if $delta % 7;
+        @term = @{$nextterm};
+    }
+    return ($dow, $week, $term[2], $term[3]) if ( wantarray );
+    return _fmt_oxdate_as_string( $dow, $week, $term[2], $term[3] );
+}
+
+
 sub Init {
     _init_db;
     _init_range;
@@ -257,6 +301,7 @@ sub ToOx {
     my @date = reverse @dmy;
     Init unless defined $_initcal;
     my $dow = Day_of_Week_to_Text( Day_of_Week( @date ) );
+
     @term = ThisTerm( @date );
     if ( $#term ) {
         # We're in term
@@ -271,42 +316,7 @@ sub ToOx {
     } else {
         return undef if $mode eq 'full_term';
         return undef if $mode eq 'ext_term';
-        # We're not in term time; try nearest
-        my $tm = Mktime((@date), 0, 0, 0);
-        my @terms = sort { $a->[0] <=> $b->[0] } @_oxford_full_terms;
-        my ( $prevterm, $nextterm );
-        my $curterm = shift @terms;
-
-        while ($curterm) { 
-            if ( $tm < $curterm->[0] ) {
-                if ( $prevterm && $tm >= ($prevterm->[1] + ONE_WEEK) ) {
-                    $nextterm = $curterm;
-                    last;
-                } else {
-                    return undef; # out of range 
-                }
-            } 
-            $prevterm = $curterm;
-            $curterm = shift @terms;
-        }
-        return undef unless $nextterm;
-
-        # We are in the gap between terms .. which one is closest?
-        my $prevgap = $tm - ($prevterm->[1] + ONE_WEEK);
-        my $nextgap = $tm - $nextterm->[0];
-
-        if ( abs($prevgap) < abs($nextgap) ) {
-            # if equal go for -<n>th week
-            $week = _find_week( $tm, 8, $prevterm->[1] );
-            @term = @{$prevterm};
-        } else {
-            my $delta = $nextgap / (24 * 60 * 60);
-            $week = 1 + int( $delta / 7 );
-            $week -= 1 if $delta % 7;
-            @term = @{$nextterm};
-        }
-        return ($dow, $week, $term[2], $term[3]) if ( wantarray );
-        return _fmt_oxdate_as_string( $dow, $week, $term[2], $term[3] );
+        return _to_ox_nearest( @date );
     }
 }
 

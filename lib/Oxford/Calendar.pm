@@ -186,7 +186,7 @@ sub _sunday_of_first {
     my ( $year, $term ) = @_;
     Init() unless defined $_initcal;
     my $date = $db{"$term $year"};
-    die "_sunday_of_first: undefined term start for $term, $year" unless $date;
+    return undef unless $date;
     return Decode_Date_EU($date);
 }
 
@@ -207,7 +207,7 @@ sub _to_ox_nearest {
                 $nextterm = $curterm;
                 last;
             } else {
-                return undef; # out of range 
+                die "Date out of range";
             }
         }
         $prevterm = $curterm;
@@ -308,7 +308,7 @@ sub ToOx {
     if ( $#term ) {
         # We're in term
         my @term_start = _sunday_of_first( @term );
-        return undef unless ( $#term_start );
+        die "Date out of range" unless ( $#term_start );
         my $days_from_start = Delta_Days( @term_start, @date );
         my $week_offset = $days_from_start < 0 ? 0 : 1;
         my $week = int( $days_from_start / 7 ) + $week_offset;
@@ -522,7 +522,7 @@ sub FromOx {
     ( $year, $term, $week, $day ) = @_;
     $year =~ s/\s//g;
     $term =~ s/\s//g;
-    return undef unless exists $db{"$term $year"};
+    die "No data for $term $year" unless exists $db{"$term $year"};
     {
         my $foo = 0;
         %lu = ( map { $_, $foo++ } DAYS );
@@ -534,7 +534,7 @@ sub FromOx {
     return join "/", reverse( Date::Calc::Add_Delta_Days( @start, $delta ) );
 }
 
-"A TRUE VALUE";
+1;
 
 =head1 BUGS
 

@@ -1,31 +1,34 @@
-1.9   UNRELEASED
+2.0   UNRELEASED
+
+    INCOMPATIBLE CHANGES:
+
+    - ToOx will return an array if called in array context;
+      this will break code that does 'print ToOx(..)' directly
+    - The string returned by ToOx no longer has a trailing full stop.
+    - ToOx will return undef, rather than an error string if a date
+      requested is not in term time (if full_term or ext_term was
+      specifed)
+    - Parse will return undef, rather than an error string, if the
+      string could not be parsed
+    - ToOx and FromOx will die if the date requested is not in the internal
+      database
+
+    OTHER CHANGES:
+
     - Improve documention to describe the Oxford date format and add
       references to the University (fixes RT#27365)
     - Move Calendar.pm to lib/, and test.pl to t/ (and convert to using
       Test::More)
     - General refactoring and cleanup
     - Changes from Aaron Wilson:
-      - ToOx will return an array if called in that context
       - ToOx can be called in multiple modes with different levels
         of strictness (fixes RT#27366).
-    - The string returned by ToOx no longer has a trailing full stop.
     - Changes inspired by Janet McKnight:
       - The module calculates the Oxford terms from the definition laid
         out in University Regulations as well as the reckoning of dates
         of full term (also fixes RT#27366).
     - Reference to CPAN RT in documentation
-    - ToOx, FromOx and Parse will return undef, rather than error strings
-      if there are no valid dates available or the date cannot be parsed
     
-    INCOMPATIBLE CHANGES
-    ====================
-
-    - ToOx will return an array if wantarray is true; 
-      this will break code that does 'print ToOx(..)' directly
-    - ToOx, FromOx and Parse will return undef, rather than error strings
-      if there are no valid dates available or the date cannot be parsed
-    - The string returned by ToOx no longer has a trailing full stop.
-
 1.8   2007-05-27
     - New maintainer: Dominic Hargreaves <dom@cpan.org>
     - Convert built-in data to YAML and add more dates

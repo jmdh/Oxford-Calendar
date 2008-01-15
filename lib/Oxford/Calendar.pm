@@ -1,7 +1,7 @@
 # Oxford University calendar conversion.
 # Simon Cozens (c) 1999-2002
 # Eugene van der Pijll (c) 2004
-# Dominic Hargreaves / University of Oxford (c) 2007
+# Dominic Hargreaves / University of Oxford (c) 2007-2008
 # Artistic License
 package Oxford::Calendar;
 $Oxford::Calendar::VERSION = "1.8_02";

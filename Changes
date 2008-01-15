@@ -11,7 +11,8 @@
     - Parse will return undef, rather than an error string, if the
       string could not be parsed
     - ToOx and FromOx will die if the date requested is not in the internal
-      database
+      database; if appropriate, you should eval calls to these functions
+      and perform appropriate error handling.
 
     OTHER CHANGES:
 

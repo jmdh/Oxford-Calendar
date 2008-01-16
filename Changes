@@ -13,6 +13,7 @@
     - ToOx and FromOx will die if the date requested is not in the internal
       database; if appropriate, you should eval calls to these functions
       and perform appropriate error handling.
+    - The format of the YAML database has changed.
 
     OTHER CHANGES:
 
@@ -29,6 +30,8 @@
         out in University Regulations as well as the reckoning of dates
         of full term (also fixes RT#27366).
     - Reference to CPAN RT in documentation
+    - ToOx can be called with a 'confirmed' option, which ignores dates
+      marked as provisional (fixes RT#31289).
     
 1.8   2007-05-27
     - New maintainer: Dominic Hargreaves <dom@cpan.org>

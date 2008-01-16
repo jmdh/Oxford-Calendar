@@ -150,16 +150,14 @@ sub _init_range {
     foreach my $termspec ( keys %db ) {
         next unless $db{$termspec};
 
-        my $time = eval { Mktime( Decode_Date_EU( $db{$termspec} ), 0, 0, 0 ) }
+        my $time = eval { Mktime( Decode_Date_EU( $db{$termspec}->{start} ), 0, 0, 0 ) }
              or die
-                "Could not decode date ($db{$termspec}) for term $termspec: $@";
+                "Could not decode date ($db{$termspec}->{start}) for term $termspec: $@";
 
         push @_oxford_full_terms,
-            [$time, ($time + SEVEN_WEEKS), split(/ /, $termspec)];
+            [$time, ($time + SEVEN_WEEKS), split(/ /, $termspec), $db{$termspec}->{provisional}];
     }
 
-    # Sort this here, but do not rely on it later
-    @_oxford_full_terms = sort { $a->[0] <=> $b->[0] } @_oxford_full_terms;
     $_initrange++;
 }
 
@@ -187,11 +185,12 @@ sub _sunday_of_first {
     Init() unless defined $_initcal;
     my $date = $db{"$term $year"};
     return undef unless $date;
-    return Decode_Date_EU($date);
+    return ( $date->{provisional}, Decode_Date_EU($date->{start}) );
 }
 
 sub _to_ox_nearest {
     my @date = @_;
+    my $confirmed = pop @date;
     my $week;
     my @term;
     _init_range() unless defined $_initrange;
@@ -229,6 +228,7 @@ sub _to_ox_nearest {
         $week -= 1 if $delta % 7;
         @term = @{$nextterm};
     }
+    return undef if $term[4] && $confirmed;
     return ($dow, $week, $term[2], $term[3]) if ( wantarray );
     return _fmt_oxdate_as_string( $dow, $week, $term[2], $term[3] );
 }
@@ -259,17 +259,22 @@ or an array
 depending on how it is called. The exact behaviour is modified by the 'mode'
 option described below.
 
-If no data is available for the requested date, undef will be returned.
+If the requested date is not in full term or extended term (see below),
+undef will be returned.
+
+If the requested date is not covered by the database, ToOx will die with
+an "out of range" error message. Therefore it is recommended to eval ToOx
+with appropriate error handling.
 
 %options can contain additional named parameter options:
 
-=over 4
+=over 5
 
 =item mode
 
 Several modes are available:
 
-=over 5
+=over 6
 
 =item full_term
 
@@ -293,6 +298,16 @@ previous releases; this may be changed in future.
 
 =back
 
+=over 4
+
+=item confirmed
+
+If true, ignores dates marked as provisional in the database.
+
+=back
+
+=back
+
 =cut
 
 sub ToOx {
@@ -308,17 +323,19 @@ sub ToOx {
     if ( $#term ) {
         # We're in term
         my @term_start = _sunday_of_first( @term );
-        die "Date out of range" unless ( $#term_start );
+        my $provisional = shift @term_start;
+        die "Date out of range" unless ( $#term_start == 2 );
         my $days_from_start = Delta_Days( @term_start, @date );
         my $week_offset = $days_from_start < 0 ? 0 : 1;
         my $week = int( $days_from_start / 7 ) + $week_offset;
+        return undef if $options->{confirmed} && $provisional;
         return undef if ( ( $week < 1 || $week > 8 ) && $mode eq 'full_term' );
         return ( $dow, $week, $term[1], $term[0] ) if ( wantarray );
         return _fmt_oxdate_as_string( $dow, $week, $term[1], $term[0] );
     } else {
         return undef if $mode eq 'full_term';
         return undef if $mode eq 'ext_term';
-        return _to_ox_nearest( @date );
+        return _to_ox_nearest( @date, $options->{confirmed} );
     }
 }
 
@@ -327,7 +344,7 @@ sub ToOx {
 Given a year, month, term in standard human format (that is, month is
 1-12, not 0-11, and year is four digits) will returns the current term
 or undef if in vacation or unknown. The term is given as an array in the
-form (year, term)
+form (year, term).
 
 =cut
 
@@ -350,7 +367,7 @@ sub ThisTerm {
 Given a day, month and year in standard human format (that is, month is
 1-12, not 0-11, and year is four digits) will return the next term (whether
 or not the date given is in term time).
-The term is given as an array in the form (year, term)
+The term is given as an array in the form (year, term).
 
 =cut
 
@@ -370,6 +387,8 @@ sub NextTerm {
     return @next_term;
 }
 
+=over 3
+
 =item StatutoryTermDates($year)
 
 Returns a hash reference keyed on terms for a given year, the value of
@@ -378,6 +397,8 @@ The dates are stored as array references containing numeric
 year, month, day values.
 
 Note: these are the statutory term dates, not full term dates.
+
+=back
 
 =cut
 
@@ -436,6 +457,7 @@ sub StatutoryTermDates {
     return $term_dates;
 }
 
+=over 3
 
 =item Parse($string)
 
@@ -443,9 +465,11 @@ Takes a free-form description of an Oxford calendar date, and attempts
 to divine the expected meaning. If the name of a term is not found, the
 current term will be assumed. If the description is unparsable, undef
 is returned.  Otherwise, an array will be returned of the form
-C<($year,$term,$week,$day)>
+C<($year,$term,$week,$day)>.
 
 This function is experimental.
+
+=back
 
 =cut
 
@@ -508,10 +532,16 @@ sub Parse {
     return ( $year, $term, $week, $day );
 }
 
+=over 3
+
 =item FromOx($year, $term, $week, $day)
 
 Converts an Oxford date into a Georgian date, returning a string of the
 form C<DD/MM/YYYY> or undef.
+
+If the requested date is not covered by the database, FromOx will die with
+an "out of range" error message. Therefore it is recommended to eval ToOx
+with appropriate error handling.
 
 =cut
 
@@ -529,6 +559,7 @@ sub FromOx {
     }
     my $delta = 7 * ( $week - 1 ) + $lu{$day};
     my @start = _sunday_of_first( $year, $term );
+    shift @start;
     die "The internal database is bad for $term $year"
         unless $start[0];
     return join "/", reverse( Date::Calc::Add_Delta_Days( @start, $delta ) );
@@ -557,41 +588,91 @@ employee of the Computing Services, University of Oxford.
 __DATA__
 --- #YAML:1.0
 Calendar:
-  Hilary 2001: 14/01/2001
-  Hilary 2002: 13/01/2002
-  Hilary 2003: 19/01/2003
-  Hilary 2004: 18/01/2004
-  Hilary 2005: 16/01/2005
-  Hilary 2006: 15/01/2006
-  Hilary 2007: 14/01/2007
-  Hilary 2008: 13/01/2008
-  Hilary 2009: 18/01/2009
-  Hilary 2010: 17/01/2010
-  Hilary 2011: 16/01/2011
-  Hilary 2012: 15/01/2012
-  Hilary 2013: 13/01/2013
-  Michaelmas 2001: 07/10/2001
-  Michaelmas 2002: 13/10/2002
-  Michaelmas 2003: 12/10/2003
-  Michaelmas 2004: 10/10/2004
-  Michaelmas 2005: 09/10/2005
-  Michaelmas 2006: 08/10/2006
-  Michaelmas 2007: 07/10/2007
-  Michaelmas 2008: 12/10/2008
-  Michaelmas 2009: 11/10/2009
-  Michaelmas 2010: 10/10/2010
-  Michaelmas 2011: 09/10/2011
-  Michaelmas 2012: 07/10/2012
-  Trinity 2001: 22/04/2001
-  Trinity 2002: 21/04/2002
-  Trinity 2003: 27/04/2003
-  Trinity 2004: 25/04/2004
-  Trinity 2005: 24/04/2005
-  Trinity 2006: 23/04/2006
-  Trinity 2007: 22/04/2007
-  Trinity 2008: 20/04/2008
-  Trinity 2009: 26/04/2009
-  Trinity 2010: 25/04/2010
-  Trinity 2011: 01/05/2011
-  Trinity 2012: 22/04/2012
-  Trinity 2013: 21/04/2013
+  Hilary 2001:
+    start: 14/01/2001
+  Hilary 2002:
+    start: 13/01/2002
+  Hilary 2003:
+    start: 19/01/2003
+  Hilary 2004:
+    start: 18/01/2004
+  Hilary 2005:
+    start: 16/01/2005
+  Hilary 2006:
+    start: 15/01/2006
+  Hilary 2007:
+    start: 14/01/2007
+  Hilary 2008:
+    start: 13/01/2008
+  Hilary 2009:
+    start: 18/01/2009
+  Hilary 2010:
+    start: 17/01/2010
+    provisional: 1
+  Hilary 2011:
+    start: 16/01/2011
+    provisional: 1
+  Hilary 2012:
+    start: 15/01/2012
+    provisional: 1
+  Hilary 2013:
+    start: 13/01/2013
+    provisional: 1
+  Michaelmas 2001:
+    start: 07/10/2001
+  Michaelmas 2002:
+    start: 13/10/2002
+  Michaelmas 2003:
+    start: 12/10/2003
+  Michaelmas 2004:
+    start: 10/10/2004
+  Michaelmas 2005:
+    start: 09/10/2005
+  Michaelmas 2006:
+    start: 08/10/2006
+  Michaelmas 2007:
+    start: 07/10/2007
+  Michaelmas 2008:
+    start: 12/10/2008
+  Michaelmas 2009:
+    start: 11/10/2009
+    provisional: 1
+  Michaelmas 2010:
+    start: 10/10/2010
+    provisional: 1
+  Michaelmas 2011:
+    start: 09/10/2011
+    provisional: 1
+  Michaelmas 2012:
+    start: 07/10/2012
+    provisional: 1
+  Trinity 2001:
+    start: 22/04/2001
+  Trinity 2002:
+    start: 21/04/2002
+  Trinity 2003:
+    start: 27/04/2003
+  Trinity 2004:
+    start: 25/04/2004
+  Trinity 2005:
+    start: 24/04/2005
+  Trinity 2006:
+    start: 23/04/2006
+  Trinity 2007:
+    start: 22/04/2007
+  Trinity 2008:
+    start: 20/04/2008
+  Trinity 2009:
+    start: 26/04/2009
+  Trinity 2010:
+    start: 25/04/2010
+    provisional: 1
+  Trinity 2011:
+    start: 01/05/2011
+    provisional: 1
+  Trinity 2012:
+    start: 22/04/2012
+    provisional: 1
+  Trinity 2013:
+    start: 21/04/2013
+    provisional: 1

@@ -4,7 +4,7 @@
 # Dominic Hargreaves / University of Oxford (c) 2007-2008
 # Artistic License
 package Oxford::Calendar;
-$Oxford::Calendar::VERSION = "1.8_02";
+$Oxford::Calendar::VERSION = "2.0";
 use strict;
 use Text::Abbrev;
 use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime Easter_Sunday Date_to_Days Day_of_Week_to_Text Day_of_Week);

@@ -608,7 +608,6 @@ Calendar:
     start: 18/01/2009
   Hilary 2010:
     start: 17/01/2010
-    provisional: 1
   Hilary 2011:
     start: 16/01/2011
     provisional: 1
@@ -617,6 +616,9 @@ Calendar:
     provisional: 1
   Hilary 2013:
     start: 13/01/2013
+    provisional: 1
+  Hilary 2014:
+    start: 19/01/2014
     provisional: 1
   Michaelmas 2001:
     start: 07/10/2001
@@ -636,7 +638,6 @@ Calendar:
     start: 12/10/2008
   Michaelmas 2009:
     start: 11/10/2009
-    provisional: 1
   Michaelmas 2010:
     start: 10/10/2010
     provisional: 1
@@ -645,6 +646,9 @@ Calendar:
     provisional: 1
   Michaelmas 2012:
     start: 07/10/2012
+    provisional: 1
+  Michaelmas 2013:
+    start: 13/10/2013
     provisional: 1
   Trinity 2001:
     start: 22/04/2001
@@ -666,7 +670,8 @@ Calendar:
     start: 26/04/2009
   Trinity 2010:
     start: 25/04/2010
-    provisional: 1
+  # Late Easter: as Easter falls on 24 April in 2011, Council will need to
+  # approve a seven-week vacation if the below Provisional Date is approved.
   Trinity 2011:
     start: 01/05/2011
     provisional: 1
@@ -675,4 +680,7 @@ Calendar:
     provisional: 1
   Trinity 2013:
     start: 21/04/2013
+    provisional: 1
+  Trinity 2014:
+    start: 27/04/2014
     provisional: 1

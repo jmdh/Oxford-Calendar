@@ -1,4 +1,4 @@
-2.02
+2.02  2008-06-05
     - Fix POD formatting problems (fixes RT#36481)
       [thanks to Will Thompson for pointing this out]
 

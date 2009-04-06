@@ -1,3 +1,7 @@
+2.03  
+    - Update calendar from information in
+      http://www.ox.ac.uk/gazette/2008-9/weekly/120309/acts.htm#2Ref
+
 2.02  2008-06-05
     - Fix POD formatting problems (fixes RT#36481)
       [thanks to Will Thompson for pointing this out]

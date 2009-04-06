@@ -1,10 +1,10 @@
 # Oxford University calendar conversion.
 # Simon Cozens (c) 1999-2002
 # Eugene van der Pijll (c) 2004
-# Dominic Hargreaves / University of Oxford (c) 2007-2008
+# Dominic Hargreaves / University of Oxford (c) 2007-2009
 # Artistic License
 package Oxford::Calendar;
-$Oxford::Calendar::VERSION = "2.02";
+$Oxford::Calendar::VERSION = "2.03";
 use strict;
 use Text::Abbrev;
 use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime Easter_Sunday Date_to_Days Day_of_Week_to_Text Day_of_Week);
@@ -600,7 +600,6 @@ Calendar:
     start: 17/01/2010
   Hilary 2011:
     start: 16/01/2011
-    provisional: 1
   Hilary 2012:
     start: 15/01/2012
     provisional: 1
@@ -609,6 +608,9 @@ Calendar:
     provisional: 1
   Hilary 2014:
     start: 19/01/2014
+    provisional: 1
+  Hilary 2015:
+    start: 18/01/2015
     provisional: 1
   Michaelmas 2001:
     start: 07/10/2001
@@ -630,7 +632,6 @@ Calendar:
     start: 11/10/2009
   Michaelmas 2010:
     start: 10/10/2010
-    provisional: 1
   Michaelmas 2011:
     start: 09/10/2011
     provisional: 1
@@ -639,6 +640,9 @@ Calendar:
     provisional: 1
   Michaelmas 2013:
     start: 13/10/2013
+    provisional: 1
+  Michaelmas 2014:
+    start: 12/10/2014
     provisional: 1
   Trinity 2001:
     start: 22/04/2001
@@ -660,11 +664,8 @@ Calendar:
     start: 26/04/2009
   Trinity 2010:
     start: 25/04/2010
-  # Late Easter: as Easter falls on 24 April in 2011, Council will need to
-  # approve a seven-week vacation if the below Provisional Date is approved.
   Trinity 2011:
     start: 01/05/2011
-    provisional: 1
   Trinity 2012:
     start: 22/04/2012
     provisional: 1
@@ -673,4 +674,7 @@ Calendar:
     provisional: 1
   Trinity 2014:
     start: 27/04/2014
+    provisional: 1
+  Trinity 2015:
+    start: 26/04/2015
     provisional: 1

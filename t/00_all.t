@@ -60,9 +60,9 @@ throws_ok { Oxford::Calendar::ToOx( 1, 11, $future_year, { mode => 'nearest' } )
 throws_ok { Oxford::Calendar::FromOx( $future_year, 'Hilary', 1, 'Sunday' ) } qr/No data for Hilary $future_year/, 'FromOx out of range';
 
 # Provisional
-my $testdate5 = 'Saturday, -2nd week, Hilary 2011';
-is( Oxford::Calendar::ToOx(1, 1, 2011, { mode => 'nearest', confirmed => 0 } ), $testdate5 );
-is( Oxford::Calendar::ToOx(1, 1, 2011, { mode => 'nearest', confirmed => 1 } ), undef );
-my $testdate6 = 'Tuesday, 3rd week, Hilary 2011';
-is( Oxford::Calendar::ToOx(1, 2, 2011, { mode => 'full_term', confirmed => 0 } ), $testdate6 );
-is( Oxford::Calendar::ToOx(1, 2, 2011, { mode => 'full_term', confirmed => 1 } ), undef );
+my $testdate5 = 'Thursday, -2nd week, Hilary 2015';
+is( Oxford::Calendar::ToOx(1, 1, 2015, { mode => 'nearest', confirmed => 0 } ), $testdate5 );
+is( Oxford::Calendar::ToOx(1, 1, 2015, { mode => 'nearest', confirmed => 1 } ), undef );
+my $testdate6 = 'Tuesday, 3rd week, Hilary 2015';
+is( Oxford::Calendar::ToOx(3, 2, 2015, { mode => 'full_term', confirmed => 0 } ), $testdate6 );
+is( Oxford::Calendar::ToOx(3, 2, 2015, { mode => 'full_term', confirmed => 1 } ), undef );

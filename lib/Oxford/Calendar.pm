@@ -1,10 +1,10 @@
 # Oxford University calendar conversion.
 # Simon Cozens (c) 1999-2002
 # Eugene van der Pijll (c) 2004
-# Dominic Hargreaves / University of Oxford (c) 2007-2009
+# Dominic Hargreaves / University of Oxford (c) 2007-2010
 # Artistic License
 package Oxford::Calendar;
-$Oxford::Calendar::VERSION = "2.03";
+$Oxford::Calendar::VERSION = "2.04";
 use strict;
 use Text::Abbrev;
 use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime Easter_Sunday Date_to_Days Day_of_Week_to_Text Day_of_Week);
@@ -602,7 +602,6 @@ Calendar:
     start: 16/01/2011
   Hilary 2012:
     start: 15/01/2012
-    provisional: 1
   Hilary 2013:
     start: 13/01/2013
     provisional: 1
@@ -611,6 +610,9 @@ Calendar:
     provisional: 1
   Hilary 2015:
     start: 18/01/2015
+    provisional: 1
+  Hilary 2016:
+    start: 17/01/2016
     provisional: 1
   Michaelmas 2001:
     start: 07/10/2001
@@ -634,7 +636,6 @@ Calendar:
     start: 10/10/2010
   Michaelmas 2011:
     start: 09/10/2011
-    provisional: 1
   Michaelmas 2012:
     start: 07/10/2012
     provisional: 1
@@ -643,6 +644,9 @@ Calendar:
     provisional: 1
   Michaelmas 2014:
     start: 12/10/2014
+    provisional: 1
+  Michaelmas 2015:
+    start: 11/10/2015
     provisional: 1
   Trinity 2001:
     start: 22/04/2001
@@ -668,7 +672,6 @@ Calendar:
     start: 01/05/2011
   Trinity 2012:
     start: 22/04/2012
-    provisional: 1
   Trinity 2013:
     start: 21/04/2013
     provisional: 1
@@ -677,4 +680,7 @@ Calendar:
     provisional: 1
   Trinity 2015:
     start: 26/04/2015
+    provisional: 1
+  Trinity 2016:
+    start: 24/04/2016
     provisional: 1

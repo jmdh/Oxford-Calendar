@@ -3,3 +3,4 @@ Changes
 MANIFEST
 Makefile.PL
 t/00_all.t
+t/01_bug_sundays_0th_or_earlier.t

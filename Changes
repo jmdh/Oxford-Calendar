@@ -2,7 +2,7 @@
     - Update calendar from information in
       http://www.ox.ac.uk/gazette/2009-10/weekly/110310/acts.htm#2Ref
     - Bugfix: fix incorrect week number from ToOx for Sundays in week
-      0 or earlier of term
+      0 or earlier of term (thanks to Tim Bagot for the fix)
 
 2.03  2009-04-26
     - Update calendar from information in

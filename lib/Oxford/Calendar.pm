@@ -324,8 +324,8 @@ sub ToOx {
         my $provisional = shift @term_start;
         die "Date out of range" unless ( $#term_start == 2 );
         my $days_from_start = Delta_Days( @term_start, @date );
-        my $week_offset = $days_from_start < 0 ? 0 : 1;
-        my $week = int( $days_from_start / 7 ) + $week_offset;
+        my $week_offset = $days_from_start < 0 ? 1 : 7;
+        my $week = int( ( $days_from_start + $week_offset ) / 7);
         return undef if $options->{confirmed} && $provisional;
         return undef if ( ( $week < 1 || $week > 8 ) && $mode eq 'full_term' );
         return ( $dow, $week, $term[1], $term[0] ) if ( wantarray );

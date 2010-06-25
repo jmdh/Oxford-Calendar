@@ -524,7 +524,7 @@ sub Parse {
 
 =item FromOx($year, $term, $week, $day)
 
-Converts an Oxford date into a Georgian date, returning a string of the
+Converts an Oxford date into a Gregorian date, returning a string of the
 form C<DD/MM/YYYY> or undef.
 
 If the requested date is not covered by the database, FromOx will die with

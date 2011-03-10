@@ -1,5 +1,8 @@
 2.05
     - Correct Georgian -> Gregorian in documentation
+    - Improve first example in documentation: use say rather than
+      print; use ToOx in scalar context; explicitly use Date::Calc
+      (fixes RT#66439) (thanks, David Sheldon)
 
 2.04  2010-05-03
     - Update calendar from information in

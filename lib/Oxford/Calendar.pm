@@ -31,8 +31,10 @@ Oxford::Calendar - University of Oxford calendar conversion routines
 
 =head1 SYNOPSIS
 
+    use 5.10.0;
     use Oxford::Calendar;
-    print "Today is ", Oxford::Calendar::ToOx(reverse Date::Calc::Today);
+    use Date::Calc;
+    say "Today is " . Oxford::Calendar::ToOx(reverse Date::Calc::Today);
 
 =head1 DESCRIPTION
 

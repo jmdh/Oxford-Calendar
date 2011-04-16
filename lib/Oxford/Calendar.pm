@@ -529,6 +529,10 @@ sub Parse {
 Converts an Oxford date into a Gregorian date, returning a string of the
 form C<DD/MM/YYYY> or undef.
 
+The arguments are of the same format as returned by ToOx in array context;
+that is, a four-digit year, the name of the term, the week number, and
+the name of the day of week (e.g. 'Sunday').
+
 If the requested date is not covered by the database, FromOx will die with
 an "out of range" error message. Therefore it is recommended to eval ToOx
 with appropriate error handling.

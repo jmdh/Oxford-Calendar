@@ -3,6 +3,7 @@
     - Improve first example in documentation: use say rather than
       print; use ToOx in scalar context; explicitly use Date::Calc
       (fixes RT#66439) (thanks, David Sheldon)
+    - Clarify form of arguments for FromOx (fixes RT#66440)
 
 2.04  2010-05-03
     - Update calendar from information in

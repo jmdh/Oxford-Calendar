@@ -10,6 +10,7 @@ use Text::Abbrev;
 use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime Easter_Sunday Date_to_Days Day_of_Week_to_Text Day_of_Week);
 use YAML;
 use Time::Seconds;
+use Time::Piece;
 
 use constant CALENDAR => '/etc/oxford-calendar.yaml';
 use constant SEVEN_WEEKS => 7 * ONE_WEEK;
@@ -152,7 +153,7 @@ sub _init_range {
     foreach my $termspec ( keys %db ) {
         next unless $db{$termspec};
 
-        my $time = eval { Mktime( Decode_Date_EU( $db{$termspec}->{start} ), 0, 0, 0 ) }
+        my $time = eval { Time::Piece->strptime($db{$termspec}->{start}, '%d/%m/%Y' ) }
              or die
                 "Could not decode date ($db{$termspec}->{start}) for term $termspec: $@";
 
@@ -197,7 +198,7 @@ sub _to_ox_nearest {
     my @term;
     _init_range() unless defined $_initrange;
     my $dow = Day_of_Week_to_Text( Day_of_Week( @date ) );
-    my $tm = Mktime((@date), 0, 0, 0);
+    my $tm = Time::Piece->strptime(join('/', @date[0..2]), '%Y/%m/%d');
     my @terms = sort { $a->[0] <=> $b->[0] } @_oxford_full_terms;
     my ( $prevterm, $nextterm );
     my $curterm = shift @terms;

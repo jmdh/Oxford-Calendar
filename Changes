@@ -4,6 +4,9 @@
       print; use ToOx in scalar context; explicitly use Date::Calc
       (fixes RT#66439) (thanks, David Sheldon)
     - Clarify form of arguments for FromOx (fixes RT#66440)
+    - Switch to Time::Piece for some calculations; fixes bug
+      when calculating Oxford dates out of term near a DST change
+      (RT#64539)
 
 2.04  2010-05-03
     - Update calendar from information in

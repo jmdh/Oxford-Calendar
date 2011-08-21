@@ -570,6 +570,10 @@ Bugs may be browsed and submitted at
 
 L<http://rt.cpan.org/Public/Dist/Display.html?Name=Oxford-Calendar>
 
+A copy of the maintainer's git repository may be found at
+
+L<https://github.com/jmdh/Oxford-Calendar>
+
 =head1 AUTHOR
 
 Simon Cozens is the original author of this module.

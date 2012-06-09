@@ -1,3 +1,7 @@
+2.06  2012-06-09
+    - Update calendar from information in
+      http://www.ox.ac.uk/gazette/2011-2012/26january2012-no4976/councilandmaincommittees/#65714
+
 2.05  2011-08-21
     - Correct Georgian -> Gregorian in documentation
     - Improve first example in documentation: use say rather than

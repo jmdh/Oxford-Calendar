@@ -4,7 +4,7 @@
 # Dominic Hargreaves / University of Oxford (c) 2007-2012
 # Artistic License
 package Oxford::Calendar;
-$Oxford::Calendar::VERSION = "2.06";
+$Oxford::Calendar::VERSION = "2.07";
 use strict;
 use Text::Abbrev;
 use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime Easter_Sunday Date_to_Days Day_of_Week_to_Text Day_of_Week);
@@ -665,7 +665,7 @@ Calendar:
     start: 09/10/2016
     provisional: 1
   Michaelmas 2017:
-    start: 08/10/2018
+    start: 08/10/2017
     provisional: 1
   Trinity 2001:
     start: 22/04/2001

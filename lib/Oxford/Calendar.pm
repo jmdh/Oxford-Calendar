@@ -621,7 +621,6 @@ Calendar:
     start: 18/01/2015
   Hilary 2016:
     start: 17/01/2016
-    provisional: 1
   Hilary 2017:
     start: 15/01/2017
     provisional: 1
@@ -630,6 +629,9 @@ Calendar:
     provisional: 1
   Hilary 2019:
     start: 13/01/2019
+    provisional: 1
+  Hilary 2020:
+    start: 19/01/2020
     provisional: 1
   Michaelmas 2001:
     start: 07/10/2001
@@ -661,7 +663,6 @@ Calendar:
     start: 12/10/2014
   Michaelmas 2015:
     start: 11/10/2015
-    provisional: 1
   Michaelmas 2016:
     start: 09/10/2016
     provisional: 1
@@ -670,6 +671,9 @@ Calendar:
     provisional: 1
   Michaelmas 2018:
     start: 07/10/2018
+    provisional: 1
+  Michaelmas 2019:
+    start: 13/10/2019
     provisional: 1
   Trinity 2001:
     start: 22/04/2001
@@ -703,7 +707,6 @@ Calendar:
     start: 26/04/2015
   Trinity 2016:
     start: 24/04/2016
-    provisional: 1
   Trinity 2017:
     start: 23/04/2017
     provisional: 1
@@ -712,4 +715,7 @@ Calendar:
     provisional: 1
   Trinity 2019:
     start: 28/04/2019
+    provisional: 1
+  Trinity 2020:
+    start: 26/04/2020
     provisional: 1

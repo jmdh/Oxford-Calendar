@@ -581,8 +581,8 @@ Simon Cozens is the original author of this module.
 Eugene van der Pijll, C<pijll@cpan.org> took over maintenance from
 Simon for a time.
 
-Dominic Hargreaves currently maintains this module for the
-Computing Services, University of Oxford.
+Dominic Hargreaves currently maintains this module for
+IT Services, University of Oxford.
 
 =cut
 

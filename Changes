@@ -1,7 +1,9 @@
 2.09
     - Update calendar from information in
       http://www.ox.ac.uk/about_the_university/university_year/dates_of_term.html
-      (thanks, Stephen Gower, RT#91925)
+      (thanks, Stephen Gower; RT#91925)
+    - Correct out of date reference to Computing Services
+      (thanks, Stephen, Gower; RT#91926)
 
 2.08  2013-02-12
     - Update calendar from information in

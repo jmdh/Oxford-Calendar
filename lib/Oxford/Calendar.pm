@@ -1,10 +1,10 @@
 # Oxford University calendar conversion.
 # Simon Cozens (c) 1999-2002
 # Eugene van der Pijll (c) 2004
-# Dominic Hargreaves / University of Oxford (c) 2007-2013
+# Dominic Hargreaves / University of Oxford (c) 2007-2015
 # Artistic License
 package Oxford::Calendar;
-$Oxford::Calendar::VERSION = "2.09";
+$Oxford::Calendar::VERSION = "2.10";
 use strict;
 use Text::Abbrev;
 use Date::Calc qw(Add_Delta_Days Decode_Date_EU Delta_Days Mktime Easter_Sunday Date_to_Days Day_of_Week_to_Text Day_of_Week);

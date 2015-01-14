@@ -63,13 +63,13 @@ F</etc/oxford-calendar.yaml>; if this file does not exist, built-in data
 will be used. The built-in data is periodically updated from the
 semi-authoritative source at
 
-L<http://www.ox.ac.uk/about_the_university/university_year/dates_of_term.html>.
+L<http://www.ox.ac.uk/about/facts-and-figures/dates-of-term>.
 
 or the authoritative source, the Gazette, available online from
 
 L<http://www.ox.ac.uk/gazette/>.
 
-L<http://www.ox.ac.uk/about_the_university/university_year/index.html>
+L<http://www.ox.ac.uk/news-and-events/The-University-Year>
 describes the academic year at Oxford.
 
 =head1 DATE FORMAT

@@ -1,7 +1,8 @@
 # Oxford University calendar conversion.
 # Simon Cozens (c) 1999-2002
 # Eugene van der Pijll (c) 2004
-# Dominic Hargreaves / University of Oxford (c) 2007-2015
+# University of Oxford (c) 2007-2015
+# Dominic Hargreaves (c) 2016
 # Artistic License
 package Oxford::Calendar;
 $Oxford::Calendar::VERSION = "2.10";
@@ -581,8 +582,8 @@ Simon Cozens is the original author of this module.
 Eugene van der Pijll, C<pijll@cpan.org> took over maintenance from
 Simon for a time.
 
-Dominic Hargreaves currently maintains this module for
-IT Services, University of Oxford.
+Dominic Hargreaves maintains this module (between 2008 and 2015 for
+IT Services, University of Oxford).
 
 =cut
 

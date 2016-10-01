@@ -10,8 +10,26 @@ WriteMakefile(
         Date::Calc      => 0,
         YAML            => 0,
         Time::Seconds   => 0,
+    }, # e.g., Module::Name => 1.1
+    'AUTHOR'        => [
+        'Dominic Hargreaves <dom@earth.li>',
+    ],
+    'ABSTRACT_FROM' => 'lib/Oxford/Calendar.pm',
+    'TEST_REQUIRES' => {
         Test::More      => 0,
         Test::Exception => 0,
         Time::Piece     => 0,
-    }, # e.g., Module::Name => 1.1
+    },
+    'LICENSE'       => 'artistic_2',
+    'META_MERGE'    => {
+        'meta-spec' => { version => 2 },
+        resources => {
+            repository => {
+                type => 'git',
+                url => 'https://github.com/jmdh/Oxford-Calendar.git',
+                web => 'https://github.com/jmdh/Oxford-Calendar',
+            },
+        },
+    },
+    
 );

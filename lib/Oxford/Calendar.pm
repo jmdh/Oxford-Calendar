@@ -47,7 +47,7 @@ University.
 The Terms of the University are defined by the
 B<Regulations on the number and lengths of terms>, available online from
 
-L<http://www.admin.ox.ac.uk/examregs/03-00_REGULATIONS_ON_THE_NUMBER_AND_LENGTH_OF_TERMS.shtml>
+L<https://www.admin.ox.ac.uk/examregs/2015-16/rotnalengofterm/>
 
 This document describes the start and end dates of Oxford Terms.
 

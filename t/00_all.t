@@ -60,7 +60,7 @@ throws_ok { Oxford::Calendar::ToOx( 1, 11, $future_year, { mode => 'nearest' } )
 throws_ok { Oxford::Calendar::FromOx( $future_year, 'Hilary', 1, 'Sunday' ) } qr/No data for Hilary $future_year/, 'FromOx out of range';
 
 # Provisional
-my $testdate5 = 'Thursday, -2nd week, Hilary 2031';
+my $testdate5 = 'Thursday, 11th week, Michaelmas 2030';
 is( Oxford::Calendar::ToOx(26, 12, 2030, { mode => 'nearest', confirmed => 0 } ), $testdate5, 'Provisional date' );
 is( Oxford::Calendar::ToOx(26, 12, 2030, { mode => 'nearest', confirmed => 1 } ), undef, 'Provisional date with confirmed => 1' );
 my $testdate6 = 'Tuesday, 3rd week, Hilary 2031';
